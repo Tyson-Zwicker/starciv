@@ -9,13 +9,16 @@ export default class PlanetZone {
   resources = { food: 0, gas: 0, ore: 0, power: 0 }; //extrated per worker.
   stores = { food: 0, gas: 0, ore: 0, power: 0 }; // Units stored
   storage = { food: 0, gas: 0, ore: 0, power: 0 };  //Units that can be stored..
-  extractors = { farms: 0, refiners: 0, factories: 0, generators: 0 }; //# facilities built.
+  extractors = { farms: 0, refiners: 0, mines: 0, generators: 0 }; //# facilities built.
 
   constructor() {
 
   }
   get industry (){
-    return this.extractors.food + this.extractors.ore+this.extractors.power+this.extractors.gas;
+    let ind = this.extractors.farms + this.extractors.mines+this.extractors.generators+this.extractors.refiners;
+    console.log ('zone-industry:'+ind);
+    return  ind;
+
   }
 
   process(firstRun) {

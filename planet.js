@@ -13,6 +13,7 @@ export default class Planet {
     this.type = type;
     this.zones = zones;
     this.interface = new PlanetInterface (this, size,mien);    
+    console.log (this);
     this.process(true);
   }
   get population() {
@@ -21,8 +22,10 @@ export default class Planet {
     return pop;
   }
   get industry() {
+    
     let ind = 0;
     for (let zone of this.zones) ind += zone.industry;
+    console.log ('planet-industry ('+this.zones.length+'): '+ind);
     return ind;
   }
   get populationGrowth() {
@@ -55,7 +58,7 @@ export default class Planet {
       if (surplus <= 0) break;
     }
   }
-  process(firstRun) {
+  process(firstRun) {    
     if (firstRun !== true) {
       redistributeFood();
     }
@@ -63,89 +66,99 @@ export default class Planet {
       zone.process(firstRun);
     }
   }
-  static getRandom(star) {
-    let p = new Planet();
-    p.mien = mien;
-    p.name = star.name + star.planets.length;
-    let t = Rnd.int(0, 4);
-
-    let zones = Rnd.int(2, 8);
-    for (let zone = 0; zone < zones; zone++) {
+  static getRandom(starName, number) {   
+    const name = `${starName}-${number}`;
+    const planetTypeNum = Rnd.int(0, 4);
+    let typeName;
+    let mien;
+    const zones = [];
+    const numzones = Rnd.int(2, 8);
+    for (let zone = 0; zone < numzones; zone++) {
       let z = new PlanetZone();
-      switch (t) {
+      z.population = 0;
+      switch (planetTypeNum) {
         case 0: {
-          p.type = 'terran';
-          p.mien = StarInterface.TerranMien;
-          z.resources.food = Rnd.int(1, 4);
-          z.resources.power = Rnd.int(1, 2);
-          z.resources.ore = Rnd.int(0, 1);
-          z.resources.gas = 0;
-        }
-          break;
-        case 1: {
-          p.type = 'rocky';
-          p.mien = StarInterface.RockyMien;
-          z.resources.food = Rnd.int(0, 2);
-          z.resources.power = Rnd.int(2, 3);
-          z.resources.ore = Rnd.int(2, 3);
-          z.resources.gas = Rnd.int(1, 2);
-        } break;
-        case 2: {
-          p.type = 'tundra'
-          p.mien = StarInterface.TundraMien;
-          z.resources.food = Rnd.int(0, 1);
-          z.resources.power = Rnd.int(0, 2);
+          typeName = 'terran';
+          mien = PlanetInterface.TerranMien;
+          console.log (mien);
+          z.resources.food = Rnd.int(1, 8);
+          z.resources.power = Rnd.int(1, 3);
           z.resources.ore = Rnd.int(1, 3);
-          z.resources.gas = Rnd.int(0, 3);
-        } break;
+          z.resources.gas = 0;
+          break;
+        }          
+        case 1: {
+          typeName = 'barren';
+          mien = PlanetInterface.RockyMien;
+          z.resources.food = Rnd.int(0, 2);
+          z.resources.power = Rnd.int(2, 4);
+          z.resources.ore = Rnd.int(3, 6);
+          z.resources.gas = Rnd.int(1, 2);
+          break;
+        } 
+        case 2: {
+          typeName = 'tundra'
+          mien = PlanetInterface.TundraMien;
+          z.resources.food = Rnd.int(0, 3);
+          z.resources.power = Rnd.int(0, 3);
+          z.resources.ore = Rnd.int(1, 3);
+          z.resources.gas = Rnd.int(1, 3);
+          break;
+        } 
         case 3: {
-          p.type = 'gas';
-          p.mien = StarInterface.GasMien;
+          typeName = 'gas';
+          mien = PlanetInterface.GasMien;          
           z.resources.food = 0;
-          z.resources.power = Rnd.int(2, 3);
+          z.resources.power = Rnd.int(3, 8);
           z.resources.ore = 0;
-          z.resources.gas = Rnd.int(3, 6);
-        } break;
+          z.resources.gas = Rnd.int(3, 9);
+          break;
+        } 
+        default: {
+          throw Error ('type = '+planetTypeNum);
+        }
       }
-    }
+      zones.push (z);
+    }   
+    return new Planet (name, typeName, zones, zones.length, mien);
   }
-  static getStarter(starName, mien) {
+  static getStarter(starName) {
     let zones = [];
     for (let i = 0; i < 2; i++) {
       let z = new PlanetZone();
-      z.resources.people = 6; //require 6 food.
-      z.resources.food = 4; //2 make enough food with 2 farms. (-3 power)
+      z.population = Rnd.int(5,7); //require 6 food.
+      z.resources.food = Rnd.int(3,7); //2 make enough food with 2 farms. (-3 power)
       z.resources.power = 2; //2 of them make enough for 4 farms..
       z.resources.ore = 1; //1 left and 1 power
       z.resources.gas = 0;
       z.extractors.farms = 2;
-      z.extractors.power = 2;
-      z.extractors.mine = 1;
+      z.extractors.generators = 2;
+      z.extractors.mines = 1;
       zones.push(z);
     }
     for (let i = 2; i < 4; i++) {
       let z = new PlanetZone();
-      z.people = 0;
-      z.resources.food = 2;
-      z.resources.power = 2;
+      z.population = 0;
+      z.resources.food = Rnd.int(3,7);
+      z.resources.power = Rnd.int(2,4);
       z.resources.ore = 2;
       zones.push(z);
     }
-    let p = new Planet(starName, "Terran", zones, zones.length, PlanetInterface.TerranMien);
+    let p = new Planet('Terra', "Terran", zones, zones.length, PlanetInterface.TerranMien);
     return p;
   }
-  static getStarterHelper(starName, mien) {
+  static getStarterHelper(starName) {
     let zones = [];
     for (let i = 0; i < 3; i++) {
       let z = new PlanetZone();
-      z.resources.people = 0;
+      z.population = 0;
       z.resources.food = 0;
       z.resources.power = 2;
       z.resources.ore = 3;
       z.resources.gas = 3;
       zones.push(z);
     }
-    let p = new Planet(starName, "Rocky", zones, zones.length, PlanetInterface.RockyMien);
+    let p = new Planet("Wanderer", "Rocky", zones, zones.length, PlanetInterface.RockyMien);
     return p;
   }
 }

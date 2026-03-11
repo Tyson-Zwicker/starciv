@@ -22,23 +22,22 @@ export default class StarInterface {
     this.StarMien.setColors('#ffb', '#ff0', '#fff', 'normal');
     this.StarMien.setColors('#fff', '#fff', '#000', 'hovered');
     this.StarMien.setColors('#f00', '#ff0', '#fff', 'pressed');
-
-
   }
   constructor(starSystem, starSize, mien) {
     this.starSystem = starSystem;
     this.size = starSize;
     this.mien = mien;
-    let starDetails = { name: starSystem.name, radius: 50 * this.size, mien: this.mien };
+    let starDetails = { name: starSystem.name, radius: 10 * this.size, mien: this.mien };
     let planetDetails = [];    
     for (let i = 0; i < starSystem.planets.length; i++) {      
       let planet = starSystem.planets[i];             
-      let radius = 5*planet.zones.length;
-      let planetDetail = { name: planet.name, radius: radius, distance: this.size * 100 * (i + 2), orbitalSpeed: Rnd.int(1, 5), mien: planet.interface.mien };
+      let radius = 2*planet.zones.length;
+      let distance = this.size * 10 * (i + 2);
+      let planetDetail = { name: planet.name, radius: radius, distance: distance, orbitalSpeed: Rnd.int(1, 5), mien: planet.interface.mien };
       planetDetails.push(planetDetail);
     }
     this.simObject = this.#getSimObject(starDetails, planetDetails);
-    Sim.add (this.simObject,{x:0,y:0},0);
+    Sim.add (this.simObject,starSystem.location,0);
   }
   animate() {
     let minAngle = 0; let maxAngle = 360;
@@ -144,8 +143,7 @@ export default class StarInterface {
     let button = new Button('button-' + part.name, true,
       (data) => {
         let systemName = data.value.split('-')[2];//skip button and star...
-        let starSystem = GameState.starSystems.get(systemName);
-        console.log (starSystem);
+        let starSystem = GameState.starSystems.get(systemName);        
         if (data.toggled === true) {
           starSystem.interface.showInfoPanel();
         } else if (data.toggled === false) {

@@ -3,7 +3,7 @@ import GameEventHandler from './gameeventhandler.js';
 
 GameEventHandler.initialize();
 Main.creatorsFunction = () => {
-  GameEventHandler.animate();
+  //GameEventHandler.animate();
   
 }
 Main.run(50);

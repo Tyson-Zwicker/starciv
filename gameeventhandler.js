@@ -1,15 +1,19 @@
 import GameState from './gamestate.js';
-import StarSystem from './starsystem.js';
+import SimInterface from './siminterface.js';
 import NameGenerator from './namegenerator.js';
+import SystemMaker from './systemmaker.js';
+
 export default class GameEventHandler {
   static initialize(){
-    //For now just make a single star system..
-    let system = StarSystem.getStarter();
-    GameState.starSystems.set (system.name, system);
+    //Make stars.
     let numSystems = 500;
-    console.log (NameGenerator.names.length);
+
     for (let i = 0; i < numSystems;i++){
-      let system = StarSystem.getRandom(NameGenerator.names[i]);
+      let starSystem = SystemMaker.getRandomSystem(NameGenerator.names[i]);      
+      GameState.starSystems.set (starSystem.name, starSystem);
+      let simObject = SimInterface.getSimObject (starSystem.name, starSystem.planets);
+      starSystem.simObject = simObject;
+      SimInterface.addToSim (simObject,starSystem);
     }
   }
   static animate() {

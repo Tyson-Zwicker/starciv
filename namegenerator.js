@@ -42,6 +42,7 @@ export default class NameGenerator {
     this.names = Array.from(names);
   }
   static #pick(array) {
-    return array[Math.floor(Math.random() * array.length)];
+    let index = Math.floor(Math.random() * array.length);    
+    return array[index];
   }  
 }

@@ -13,11 +13,7 @@ export default class PlanetZone {
 
   constructor() {;}
   get industry (){
-    let ind = this.extractors.farms + this.extractors.mines+this.extractors.generators+this.extractors.refiners;
-    console.log ('zone-industry:'+ind);
+    let ind = this.extractors.farms + this.extractors.mines+this.extractors.generators+this.extractors.refiners;  
     return  ind;
-
   }
-
-  
 }

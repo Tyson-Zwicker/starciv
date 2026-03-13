@@ -46,19 +46,17 @@ export default class SimInterface {
     Sim.add(simObject, starSystem.location, 0);
   }
   static getSimObject(name, planets) {
-    if (name===undefined) console.log ('UNDEFINED NAME');
+    if (name === undefined) console.log('UNDEFINED NAME');
     let starSystem = new SimObject(name, true);
     let starPart = new Part(name, Polygon.regular(21, GFXConsts.starRadius, SimInterface.StarMien));
     starPart.addTo(starSystem, { x: 0, y: 0 }, 0);
-    console.log(planets);
     for (let i = 0; i < planets.length; i++) {
       let planet = planets[i];
       let anchorPart = new Part(name + 'Anchor' + i, Polygon.regular(3, 1, Mien.Transparent));
       let mien = SimInterface.planetMiens[planet.type];
-      console.log ('MIEN:'+ mien +"TYPE = "+planet.type);
       let planetPart = new Part(name + 'Planet' + i, Polygon.regular(11, planet.zones.length * GFXConsts.planetRadiusFactor, mien));
-      anchorPart.addTo(starPart, { x: 0, y: 0 }, Rnd.int (0,360));
-      let distance = GFXConsts.planetDistanceFactor*3 + (GFXConsts.planetDistanceFactor*i**1.5);
+      anchorPart.addTo(starPart, { x: 0, y: 0 }, Rnd.int(0, 360));
+      let distance = GFXConsts.planetDistanceFactor * 3 + (GFXConsts.planetDistanceFactor * i ** 1.5);
       planetPart.addTo(anchorPart, { x: distance, y: 0 });
       let spin = (GameState.maxPlanets - i) * GFXConsts.planetSpinFactor;
       anchorPart.spin = spin;
@@ -69,15 +67,13 @@ export default class SimInterface {
   }
 
   static #makeButtonForStar(part) {
-    let button = new Button(part.name, true,
-      (data) => {        
+    let button = new Button(part.name, false,
+      (data) => {
         let starSystem = GameState.starSystems.get(data.value);
-        if (data.toggled === true) {          
+        if (starSystem.infoPanel === undefined) {
           SimInterface.showInfoPanel(starSystem);
-        } else if (data.toggled === false) {
-          SimInterface.hideInfoPanel(starSystem);
         } else {
-          throw new Error('toggle expected.');
+          SimInterface.hideInfoPanel(starSystem);
         }
       }
     );
@@ -86,19 +82,35 @@ export default class SimInterface {
   }
 
   static showInfoPanel(starSystem) {
-    let infoPanelConstraint = { width: 150, height: 100 };
-    let infoPanel = new GUIPanel(undefined, 'horizontal', infoPanelConstraint);
+    let infoPanelConstraint = { width: 150, height: 70 };
+    let infoPanel = new GUIPanel(undefined, 'horizontal', infoPanelConstraint, true);
     infoPanel.anchor = starSystem.simObject;
     starSystem.infoPanel = infoPanel;
-    GUIElement.addText(infoPanel, SimInterface.getInfoPanelForStar(starSystem), 'left');
+    // panel, textArray, alignment, value, toggle, fn
+    GUIElement.addButton(infoPanel, SimInterface.getInfoPanelForStar(starSystem), 'left', starSystem.name, false, (r) => {
+      let starSystemName = r.value;
+      let starSystem = GameState.getStarSystem(starSystemName);
+      SimInterface.hideInfoPanel(starSystem);
+    });
+    let p = 0;
     for (let planet of starSystem.planets) {
-      GUIElement.addText(infoPanel, SimInterface.getInfoPanelForPlanet(planet), 'left');
-
+      p++;
+      GUIElement.addButton(infoPanel, SimInterface.getInfoPanelForPlanet(planet), 'left', p, false, (r) => {
+        //When a planet is pressed, create a vertical panel and hang it on this GUIelement...        
+        let el = r.owner;
+        let zonePanelConstraints = { width: el.drawnSize.width, height: 90 };
+        let zonePanel = new GUIPanel(undefined, 'vertical', zonePanelConstraints, true);
+        zonePanel.anchor = el;
+        //Now add the zone elements...        
+        for (let zone of planet.zones) {          
+          GUIElement.addText(zonePanel, SimInterface.getInfoPanelForZone(zone), 'left');
+        }
+      });
     }
   }
   static hideInfoPanel(starSystem) {
     GUI.removePanel(starSystem.infoPanel);
-    this.infoPanel = undefined;
+    starSystem.infoPanel = undefined;
   }
   static getInfoPanelForStar(starSystem) {
     let r = [];
@@ -119,13 +131,23 @@ export default class SimInterface {
     r.push(`${planet.name}`);
     r.push(`Pop:${planet.population}`);
     r.push(`Ind:${planet.industry}`);
-    if (planet.populationGrowth > 0) {
-      r.push('Growing..');
-    } else if (planet.populationGrowth < 0) {
-      r.push('Starving..');
-    } else {
-      r.push('Stable');
+    let resources = { food: 0, power: 0, ore: 0, gas: 0 };
+    for (let z of planet.zones) {
+      resources.food += z.resources.food;
+      resources.power += z.resources.power;
+      resources.ore += z.resources.ore;
+      resources.gas += z.resources.gas;
     }
+    r.push(`F:${resources.food} P:${resources.power} O:${resources.ore} G:${resources.gas}`);
+    return r;
+  }
+  static getInfoPanelForZone(zone) {
+    let r = [];
+    r.push(`Pop:${zone.population}`);
+    r.push(`F:${zone.extractors.farms}x${zone.resources.food} (${zone.stores.food}/${zone.storage.food})`);
+    r.push(`P:${zone.extractors.generators}x${zone.resources.power} (${zone.stores.power}/${zone.storage.power})`);
+    r.push(`O:${zone.extractors.mines}x${zone.resources.ore} (${zone.stores.ore}/${zone.storage.ore})`);
+    r.push(`G:${zone.extractors.refiners}x${zone.resources.gas} (${zone.stores.gas}/${zone.storage.gas})`);
     return r;
   }
 }

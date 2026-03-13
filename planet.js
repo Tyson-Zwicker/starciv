@@ -14,7 +14,6 @@ export default class Planet {
   get industry() {    
     let ind = 0;
     for (let zone of this.zones) ind += zone.industry;
-    console.log ('planet-industry ('+this.zones.length+'): '+ind);
     return ind;
   }
   get populationGrowth() {

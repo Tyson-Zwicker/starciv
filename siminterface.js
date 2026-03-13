@@ -47,7 +47,7 @@ export default class SimInterface {
   }
   static getSimObject(name, planets) {
     if (name === undefined || planets===undefined) throw new Error (`Bad params name:${name}, planets${planets}`);
-    let starSystem = new SimObject(name, true);
+    let starSystem = new SimObject(name, 'onscreen');
     let starPart = new Part(name, Polygon.regular(21, GFXConsts.starRadius, SimInterface.StarMien));
     starPart.addTo(starSystem, { x: 0, y: 0 }, 0);
     for (let i = 0; i < planets.length; i++) {

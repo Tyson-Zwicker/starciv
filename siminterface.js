@@ -80,7 +80,47 @@ export default class SimInterface {
     part.button = button;
     button.simObjectPart = part;
   }
+  static getPlanetButtonFunction() {
+    let fn = (r) => {
+      //When a planet is pressed, create a vertical panel and hang it on this GUIelement...        
+      let el = r.owner;
+      if (el.attachedPanel === undefined) {
+        let starSystemName = r.value.split('|')[0];
+        let planetIndex = r.value.split('|')[1];
+        let starSystem = GameState.getStarSystem(starSystemName);
+        let planet = starSystem.planets[planetIndex];
+        if (planet ===undefined){
+          console.log ('button returned value:'+r.value);
+          console.log (starSystem);          
+        }
+        el.highlighted = true;
+        let zonePanelConstraints = { width: el.drawnSize.width, height: 90 };
+        let zonePanel = new GUIPanel(undefined, 'vertical', zonePanelConstraints, true);
+        el.attachedPanel = zonePanel;
+        zonePanel.anchor = el;
+        //Now add the zone elements...        
+        for (let zone of planet.zones) {
+          GUIElement.addText(zonePanel, SimInterface.getInfoPanelForZone(zone), 'left');
+        }
+        //Now dim/make-inactive the other planet buttons...
+        for (let otherEl of el.panel.elements) {
+          if (otherEl !== el && otherEl.button.value.indexOf('|') > -1) { //the star button won't have a pipe it, planet buttons do.
+            otherEl.active = false;
+          }
+        }
 
+      } else {
+        GUI.removePanel(el.attachedPanel);
+        el.attachedPanel = undefined;
+        el.highlighted = false;
+        //Now reactivate other planet buttons..
+        for (let otherEl of el.panel.elements) {
+          otherEl.active = true;
+        }
+      }
+    }
+    return fn;
+  }
   static showInfoPanel(starSystem) {
     let infoPanelConstraint = { width: 150, height: 70 };
     let infoPanel = new GUIPanel(undefined, 'horizontal', infoPanelConstraint, true);
@@ -94,20 +134,14 @@ export default class SimInterface {
     });
     let p = 0;
     for (let planet of starSystem.planets) {
+      
+      let data = SimInterface.getInfoPanelForPlanet(planet);
+      let value = starSystem.name + '|' + p;
+      GUIElement.addButton(infoPanel, data, 'left', value, false, SimInterface.getPlanetButtonFunction());
       p++;
-      GUIElement.addButton(infoPanel, SimInterface.getInfoPanelForPlanet(planet), 'left', p, false, (r) => {
-        //When a planet is pressed, create a vertical panel and hang it on this GUIelement...        
-        let el = r.owner;
-        let zonePanelConstraints = { width: el.drawnSize.width, height: 90 };
-        let zonePanel = new GUIPanel(undefined, 'vertical', zonePanelConstraints, true);
-        zonePanel.anchor = el;
-        //Now add the zone elements...        
-        for (let zone of planet.zones) {          
-          GUIElement.addText(zonePanel, SimInterface.getInfoPanelForZone(zone), 'left');
-        }
-      });
     }
   }
+
   static hideInfoPanel(starSystem) {
     GUI.removePanel(starSystem.infoPanel);
     starSystem.infoPanel = undefined;
@@ -131,14 +165,14 @@ export default class SimInterface {
     r.push(`${planet.name}`);
     r.push(`Pop:${planet.population}`);
     r.push(`Ind:${planet.industry}`);
-    let resources = { food: 0, power: 0, ore: 0, gas: 0 };
-    for (let z of planet.zones) {
-      resources.food += z.resources.food;
-      resources.power += z.resources.power;
-      resources.ore += z.resources.ore;
-      resources.gas += z.resources.gas;
+    let allResources = { food: 0, power: 0, ore: 0, gas: 0 };
+    for (let zone of planet.zones) {
+      allResources.food += zone.resources.food;
+      allResources.power += zone.resources.power;
+      allResources.ore += zone.resources.ore;
+      allResources.gas += zone.resources.gas;
     }
-    r.push(`F:${resources.food} P:${resources.power} O:${resources.ore} G:${resources.gas}`);
+    r.push(`F:${allResources.food} P:${allResources.power} O:${allResources.ore} G:${allResources.gas}`);
     return r;
   }
   static getInfoPanelForZone(zone) {

@@ -1,4 +1,5 @@
 import Button from '../engine/button.js';
+import Camera from '../engine/camera.js';
 import Sim from '../engine/sim.js';
 import SimObject from '../engine/simobject.js';
 import GUI from '../engine/gui.js';
@@ -13,7 +14,6 @@ import Rnd from '../engine/rnd.js';
 
 import GFXConsts from './gfxconsts.js';
 import GameState from './gamestate.js';
-import StarSystem from './starsystem.js';
 
 export default class SimInterface {
 
@@ -46,7 +46,7 @@ export default class SimInterface {
     Sim.add(simObject, starSystem.location, 0);
   }
   static getSimObject(name, planets) {
-    if (name === undefined) console.log('UNDEFINED NAME');
+    if (name === undefined || planets===undefined) throw new Error (`Bad params name:${name}, planets${planets}`);
     let starSystem = new SimObject(name, true);
     let starPart = new Part(name, Polygon.regular(21, GFXConsts.starRadius, SimInterface.StarMien));
     starPart.addTo(starSystem, { x: 0, y: 0 }, 0);
@@ -72,8 +72,11 @@ export default class SimInterface {
         let starSystem = GameState.starSystems.get(data.value);
         if (starSystem.infoPanel === undefined) {
           SimInterface.showInfoPanel(starSystem);
+          Camera.anchorTo (starSystem.simObject);
         } else {
-          SimInterface.hideInfoPanel(starSystem);
+          SimInterface.hideInfoPanel(starSystem);          
+          Camera.freeAnchor();
+
         }
       }
     );
@@ -89,10 +92,6 @@ export default class SimInterface {
         let planetIndex = r.value.split('|')[1];
         let starSystem = GameState.getStarSystem(starSystemName);
         let planet = starSystem.planets[planetIndex];
-        if (planet ===undefined){
-          console.log ('button returned value:'+r.value);
-          console.log (starSystem);          
-        }
         el.highlighted = true;
         let zonePanelConstraints = { width: el.drawnSize.width, height: 90 };
         let zonePanel = new GUIPanel(undefined, 'vertical', zonePanelConstraints, true);
@@ -116,7 +115,7 @@ export default class SimInterface {
         //Now reactivate other planet buttons..
         for (let otherEl of el.panel.elements) {
           otherEl.active = true;
-        }
+        }        
       }
     }
     return fn;
@@ -144,6 +143,7 @@ export default class SimInterface {
 
   static hideInfoPanel(starSystem) {
     GUI.removePanel(starSystem.infoPanel);
+    Camera.freeAnchor();
     starSystem.infoPanel = undefined;
   }
   static getInfoPanelForStar(starSystem) {
@@ -172,7 +172,7 @@ export default class SimInterface {
       allResources.ore += zone.resources.ore;
       allResources.gas += zone.resources.gas;
     }
-    r.push(`F:${allResources.food} P:${allResources.power} O:${allResources.ore} G:${allResources.gas}`);
+    r.push(`F:${allResources.food}P:${allResources.power}O:${allResources.ore}G:${allResources.gas}`);
     return r;
   }
   static getInfoPanelForZone(zone) {

@@ -3,8 +3,8 @@ export default class Traffic {
   static traffic = [];
   static nonGateTraffic = [];
   static arrived = [];
-  static nonGateSpeed =0.1;
-  
+  static nonGateSpeed = 0.1;
+
   static areGatesAvailable(origin, destination) { //systems - calculate when entering "gate space"
     let available = false;
     //Check origin gate to see if it points to destination..
@@ -32,21 +32,21 @@ export default class Traffic {
 
   static addGateTraffic(fleet, origin, destination) {
     if (Traffic.areGatesAvailable(origin, destination)) {
-      traffic.push({
+      Traffic.traffic.push({
         fleet: fleet,
         origin: origin,
         destiantion: destination,
-        remaining: System.calcGateDistance(origin, destination)
+        remaining: System.calcDistance(origin, destination)
       });
       return true;
     }
     return false;
   }
-  static clearArrivals (){
+  static clearArrivals() {
     Traffic.arrived = [];
   }
   static moveGateTraffic() {
-    let keep = [];    
+    let keep = [];
     for (let traffic of Traffic.traffic) {
       traffic.remaining -= Traffic.getSpeed(traffic.origin, traffic.destination);
       if (fleet.remaining > 0) {
@@ -61,8 +61,7 @@ export default class Traffic {
 
   static moveNonGateTraffic() {
     let keep = [];
-    
-    for (let traffic of Traffic.traffic) {
+    for (let traffic of Traffic.nonGateTraffic) {
       traffic.remaining -= Traffic.nonGateSpeed;
       if (traffic.remaining > 0) {
         keep.push(traffic);
@@ -73,7 +72,15 @@ export default class Traffic {
     }
     Traffic.nonGateTraffic = keep;
   }
-
+  static addNonGateTraffic(fleet, origin, destination) {
+    Traffic.nonGateTraffic.push({
+      fleet: fleet,
+      origin: origin,
+      destiantion: destination,
+      remaining: System.calcDistance(origin, destination)
+    });
+    return true;
+  }
 
   static getArrivalsForSystem(system) {
     let localArrivals = [];

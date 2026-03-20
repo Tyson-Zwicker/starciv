@@ -26,111 +26,113 @@ class Game {
 
     for (let civ of this.civilizations) {
       for (let system of civ.systems.settled) {
-        
         //Fill outgoing freighters in all fleets. (before sending because fleet could have more>1 contracted freighter.          
-        for (let freighter of system.freighters) {
-          if (freighter.contract) {
-            let terms = Contract.getTerms(freighter.contract);
-            let failed = Trade.fillOutgoingFreighter(freighter, system, terms);
-            if (failed === 'nogate') Diplomacy.contractBrokenNoGate(freighter.contract); //
-            if (failed === 'resources') Diplomacy.contractBrokenNoResources(terms);
-            if (failed === 'blocked') Diplomacy.contractBrokenGateBlocked (terms);
+        for (let freighter of system.allFreighters.values) {
+          if (freighter.contract && freighter.contract.destination !== system) {
+            if (Traffic.areGatesAvailable(system, freighter.contract.destination)) {
+              if (!Trade.fillOutgoingFreighter(freighter, system, terms)) {
+                Diplomacy.contractBrokenNoResources(terms);
+              }
+            } else {
+              Diplomacy.contractBrokenNoGate(freighter.contract);
+            }
           }
         }
 
         //Send any fleets that request to leave.
         for (let fleet of system.fleets) {
-          if (fleet.outgoing !== undefined) { //Outgoing is an "Order" so in addition to "Where" it might contain "what"..            
-            let sent = Traffic.addGateTraffic(system, fleet);
-            if ('ok'=== sent){
-              System.removeFleet(system, fleet);
-            }else if ('nogate'===sent){              
-              Diplomacy.noGateForFleet (system,fleet);
-            }else if ('blocked' === sent){
-              Diplomacy.gateBlockedForFleet (system,fleet);
+          if (fleet.orders && fleet.orders.destination !== system) {
+            System.removeFreighters(system, fleet); 
+            let sent = Traffic.addGateTraffic(fleet, system, fleet.orders.destination);
+            if (sent) {
+              System.removeFleet(system, fleet); 
+              continue;
+            }
+          }
+          Diplomacy.gateBlockedForFleet(system, fleet); 
+        }
+
+
+        //Deal with arrivals..
+        let arrivals = Traffic.getArrivalsForSystem(system);
+
+        //Deal with potential Conflict
+        let conflicts = [];
+        for (let fleet of arrivals) {
+          let resolvedPeacefully = false;
+          if (fleet.orders.hostile) {
+            resolvedPeacefully = Diplomacy.underAttack(system, fleet); 
+            if (!resolvedPeacefully) conflicts.push(fleet);
+            continue;
+          }
+        }
+        ///Deal with actual conflicts..
+        for (let fleet of conflicts) {
+          let victory = War.battle(system, fleet);
+          Diplomacy.battleConcluded(system, fleet, victory);       
+        }
+
+        //Now that the fighting is done.. add surviving arrivals to system fleets list..
+        let incomingFreighters = [];
+        for (let fleet of arrivals) {
+          if (fleet.ships.length > 0) { //Fleets that don't survive combat have no ships remaining and can be ignored..
+            System.addFleet(system, fleet); 
+            for (let ship of fleet.ships) { //Freighters are added to AllFreighters list 
+              if (ship.isFreighter) {
+                incomingFreighters.push(ship);
+                System.addToAllFreighters(system, ship); 
+                if (ship.owner === civ) { //and (if own) freighters list
+                  System.berthOwnFreighter(system, ship);
+                }
+              }
             }
           }
         }
 
-        //Deal with arrivals..
-        let arrivals = Traffic.getArrivalsForSystem(system);
-        //Deal with Conflict,Contact or Commerce
-        for (let arrival of arrivals) {
-          if (!civ.friends.has(arrival.fleet.owner)) {
-            unresolvedConflict = false;
-            if (civ.enemies.has(arrival.fleet.owner)) {
-              War.fight(system, arrival.fleet);
-              if (arrival.fleet.ships.length > 0) {
-                Diplomacy.invaded(system, arrival.fleet.owner)
-                System.addFleet(system, arrival.fleet);
-              } else {
-                Diplomacy.successfulDefence(system, arrival.fleet.owner)
-              }
-            } else {
-              unresolvedConflict = Diplomacy.contact(civ, arrival.fleet.owner);
-            }
-          }
-          if (unresolvedConflict) {
-            War.fight(system, arrival.fleet);
-            if (arrival.fleet.ships.length > 0) {
-              Diplomacy.invaded(system, arrival.fleet.owner)
-            } else {
-              Diplomacy.successfulDefence(system, arrival.fleet.owner)
-            }
-          };
-          //Now that the fighting is done.. add surviving arrivals to system fleets list..
-          System.addFleet(arrival.fleet);
 
-          //Make a list of freighters to accept cargo from..            
-          let incomingFreighters = [];
-          for (let ship in arrival.fleet) {
-            if (ship.freigher) {
-              incomingFreighters.push(ship);
-            }
-          }
-        }   //Arrivals sorted...
 
-        //Bring in goods from other systems..         
+        //Bring in goods from arrived freighters..
         Trade.acceptIncomingGoods(system, incomingFreighters);
-        system.availableFreighterCount = System.berthOwnFreighters(system, incomingFreighters);
+        System.berthOwnFreighter(system, incomingFreighters);
+
 
         //Move freighter contracts to the next phase (or remove the
         //contract if there is no next phase-it was a one way trip).
         for (let freighter of incomingFreighters) {
           if (!Contract.nextPhase(freighter.contract)) {
             freighter.contract === undefined;
-            if (freighter.fleet.owner !== civ) Diplomacy.yourFreigherIsOnMyLawn (freighter);
+            if (freighter.fleet.owner !== civ) Diplomacy.youCannotParkFreighterHere(freighter); 
           }
         }
-        
+        // ** Arrivals all sorted! **
+
+
         //Now process individual planets...
         for (let planet of system.planets) {
-
           //Deal with the Resource extraction          
           for (let resource of Game.resources) {
-            Planet.addStores (planet, resource, Economy.calculateProduction(civ, planet, resource));
+            let production = Economy.calculateProduction(civ, planet, resource);
+            Planet.addStores(planet, resource, production);
           }
-
+                    
           //Deal with food and population growth..
-          Economy.feedPopulation(planet); //Will try to use system stores if shortfall occurs..
-          if (surplusFood > 0) {
-            system.stores.food += surplusFood;
-            Economy.populationGrowth(planet);
-          } else {
-            Economy.starvation(surplusFood, planet);
-          }
-
+          let shortfall = Planet.feedPopulation(planet); //Will try to use system stores if shortfall occurs..
+          if (shortfall <=0) {
+            Planet.starvation(surplusFood, planet); 
+          }else{
+            Planet.populationGrowth(planet);
+          }          
           //Build things..
-          Economy.groundProduction(planet);
-          Economy.orbitalProduction(planet);
-          Economy.payForInfrastructure(planet);
+          Planet.groundProduction(planet); 
+          Planet.orbitalProduction(planet);         
         }
         //Collect the stuff into system's stores..
-        Economy.moveResources(system, availableFreightersCount);
-        Economy.collectSystemTaxes(system);
+        System.collectivizeResources(system); 
+        System.collectTaxes(system); 
+        System.payForInfrastructure(system) 
       }
       //Collect money into the big pot..
-      Economy.collectCivTaxes(civ);
+      Civilization.collectTaxes(civ); 
     }
   }
 }

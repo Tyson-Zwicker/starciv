@@ -1,34 +1,27 @@
 export default class Diplomacy {
-  static contractBrokenNoGate(contract) {
-    // TODO: implement
-  }
 
-  static contractBrokenNoResources(terms) {
-    // TODO: implement
-  }
-  static contractBrokenGateBlocked (contract){
-    // TODO: implement  
-  }
-  static noGateForFleet(system, fleet) {
-    // TODO: implement
-  }
-  static gateBlockedForFleet (system, fleet){
-    // TODO: implement
-  } 
-  static invaded(system, attacker) {
-    // TODO: implement
-  }
+	static contractBrokenNoResources(terms) {
+		// TODO: handle contracts that fail due to missing resources
+	}
 
-  static successfulDefence(system, attacker) {
-    // TODO: implement
-  }
+	static contractBrokenNoGate(contract) {
+		// TODO: handle contracts that fail due to unavailable gates
+	}
 
-  static contact(civ, otherCiv) {
-    // TODO: implement
-    return false;
-  }
+	static gateBlockedForFleet(system, fleet) {
+		// TODO: notify that a fleet could not depart because gates are blocked
+	}
 
-  static yourFreigherIsOnMyLawn(freighter) {
-    // TODO: implement
-  }
+	static underAttack(system, incomingFleet) {
+		// TODO: resolve diplomatic options before combat; return true if conflict is avoided
+		return false;
+	}
+
+	static battleConcluded(system, fleet, victory) {
+		// TODO: post-battle diplomacy handling
+	}
+
+	static youCannotParkFreighterHere(freighter) {
+		// TODO: handle unauthorized freighter parking
+	}
 }

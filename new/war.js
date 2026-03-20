@@ -1,5 +1,8 @@
 export default class War {
-  static fight(system, attackingFleet) {
-    // TODO: implement
-  }
+
+	static battle(system, attackingFleet) {
+		// TODO: resolve combat and return true if attacker wins
+		return false;
+	}
+
 }

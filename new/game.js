@@ -21,6 +21,7 @@ class Game {
   systems = new Map();
   gameover = false;
   processTurn() {
+    Traffic.clearArrivals();
     Traffic.moveGateTraffic();
     Traffic.moveNonGateTraffic();
 

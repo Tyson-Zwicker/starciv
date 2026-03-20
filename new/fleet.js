@@ -3,6 +3,7 @@ export default class Fleet {
   ID = -1;
   ships = new Map();
   owner = undefined;
+  orders = undefined;
   get onlyFreighers() {
     for (let ship in this.ships.values) if (!ship.freighter) return false;
     return true;

@@ -8,8 +8,16 @@ export default class Civilization {
   stores = { money: 0, tech: 0 };
   friends = new Map();
   enemies = new Map();
+  infrastructureCost = 0; //Calculated freshly ever turn..
   static collectTaxes(civ) {
-    // TODO: implement
+    for (system of civ.systems.settled){
+      civ.stores.money += system.stores.money;
+      system.stores.money = 0;
+    }
+  }
+  static payForInfrastructure (civ){
+    let moneyRemaining = civ.stores.money - civ.infrastructureCost;
+    if (moneyRemaining<-1) civ.stores.money = -1;
   }
 }
 

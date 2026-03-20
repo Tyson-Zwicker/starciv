@@ -25,7 +25,8 @@ class Game {
     Traffic.moveGateTraffic();
     Traffic.moveNonGateTraffic();
 
-    for (let civ of this.civilizations) {
+    for (let civ of this.civilizations.values) {
+      civ.infrastructureCost = 0; //calculated at the end of the turn..
       for (let system of civ.systems.settled) {
         //Fill outgoing freighters in all fleets. (before sending because fleet could have more>1 contracted freighter.          
         for (let freighter of system.allFreighters.values) {
@@ -90,15 +91,11 @@ class Game {
           }
         }
 
-
-
         //Bring in goods from arrived freighters..
         Trade.acceptIncomingGoods(system, incomingFreighters);
         System.berthOwnFreighter(system, incomingFreighters);
 
-
-        //Move freighter contracts to the next phase (or remove the
-        //contract if there is no next phase-it was a one way trip).
+        //Move freighter contracts to the next phase (or remove the contract if there is no next phase-it was a one way trip).
         for (let freighter of incomingFreighters) {
           if (!Contract.nextPhase(freighter.contract)) {
             freighter.contract === undefined;
@@ -129,11 +126,11 @@ class Game {
         }
         //Collect the stuff into system's stores..
         System.collectivizeResources(system); 
-        System.collectTaxes(system); 
-        System.payForInfrastructure(system) 
+        civ.infrastureCost += System.calculateInfrastructureCost(system) 
       }
       //Collect money into the big pot..
       Civilization.collectTaxes(civ); 
+      Civilization.payForInfrastructure (civ);
     }
   }
 }

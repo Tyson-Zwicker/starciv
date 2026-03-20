@@ -19,36 +19,58 @@ export default class System {
   }
 
   static removeFreighters(system, fleet) {
-    // TODO: remove a fleet's freighters from system tracking
-    // Remove them from freighers and (if applicable) ownFreighters..
+    for (let ship of fleet) {
+      if (system.freighters.has(ship.id)) system.freighters.delete(ship.id);
+      if (system.allFreighters.has(ship.id)) system.allFreighters.delete(ship.id);
+    }
   }
 
   static removeFleet(system, fleet) {
-    // TODO: implement
+    system.fleets.delete(fleet.id);
   }
 
   static addFleet(system, fleet) {
-    // TODO: implement
+    system.fleets.set(fleet.id, fleet);
   }
 
   static addToAllFreighters(system, freighter) {
-    // TODO: track freighter presence in the system
+    system.allFreighters.set(freighter.id, freighter);
   }
 
   static berthOwnFreighter(system, freighter) {
-    // TODO: implement
+    system.freighters.set(freighter.id, freighter);
   }
-  static calcGateDistance(system, otherSystem) {
+  static calcDistance(system, otherSystem) {
     return Math.hypot(system.x - otherSystem.x, system.y - otherSystem.y);
   }
-  static collectivizeResources (system){
-    //This depends upon there being available freighters to move the resources..
-    //TODO: implement
+  static collectivizeResources(system) {
+    let resources = ['food', 'ore', 'gas','money','tech'];
+    for (let planet of system.planets) {
+      for (let resource of resources) {
+        while (planet.stores[resource] > 0) {
+          if (!system.freighters.length > 0) return;
+          system.stores[resource] ++;
+          planet.stores[resource] --;
+          system.freighters.pop();
+        }
+      }
+    }
   }
-  static collectTaxes(system) {
-    // TODO: implement
-  }
-  static payForInfrastructure(system) {
-    // TODO: implement
+  
+  static calculateInfrastructureCost(system) {    
+    let cost = 0;
+    let resources = ['food','ore','gas'];
+    for (let planet of system.planets){
+      //First get cost of resource extraction infrastructure..
+      for (let resource of resources){
+        cost+= planet.infrastructure[resource] -1; //The base line infrasstructure is free (thus the -1)
+      }
+      //Then pay for orbital upkeep
+      cost += planet.orbitals;
+    }
+    for (let gate of system.gates){
+      cost += gate.cost;
+    }
+    return cost;
   }
 }

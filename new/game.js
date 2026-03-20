@@ -34,16 +34,20 @@ class Game {
             let failed = Trade.fillOutgoingFreighter(freighter, system, terms);
             if (failed === 'nogate') Diplomacy.contractBrokenNoGate(freighter.contract); //
             if (failed === 'resources') Diplomacy.contractBrokenNoResources(terms);
+            if (failed === 'blocked') Diplomacy.contractBrokenGateBlocked (terms);
           }
         }
 
         //Send any fleets that request to leave.
         for (let fleet of system.fleets) {
           if (fleet.outgoing !== undefined) { //Outgoing is an "Order" so in addition to "Where" it might contain "what"..            
-            if ('ok'===Traffic.addGateTraffic(system, fleet)){
+            let sent = Traffic.addGateTraffic(system, fleet);
+            if ('ok'=== sent){
               System.removeFleet(system, fleet);
-            }else {
-              Diplomacy.noGateForShip (system,fleet);
+            }else if ('nogate'===sent){              
+              Diplomacy.noGateForFleet (system,fleet);
+            }else if ('blocked' === sent){
+              Diplomacy.gateBlockedForFleet (system,fleet);
             }
           }
         }

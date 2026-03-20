@@ -1,4 +1,5 @@
 export default class Traffic {
+  static traffic = new Map (); //of fleets (key is fleet.id)
   static moveGateTraffic() {
     // TODO: implement
   }
@@ -11,10 +12,15 @@ export default class Traffic {
     //Send any fleets that request to leave.
     let sent = 'nogate';
     for (let gate of system.gates) {
-      if (gate.destination === fleet.outgoing.destination) {
-        //TODO: actually add it to the traffic...          
-        sent = 'ok'
-      }
+      if (!gate.fixedDestination ||( gate.fixedDestination === fleet.outgoing.destination)) {
+        if (gate.blocked) {
+          sent='blocked';
+        }else{
+          traffic.set (fleet.id,fleet);
+          sent = 'ok'
+          break;
+        }
+      }      
     }
     return sent;
   }

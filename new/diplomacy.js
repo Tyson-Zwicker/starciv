@@ -6,11 +6,15 @@ export default class Diplomacy {
   static contractBrokenNoResources(terms) {
     // TODO: implement
   }
-
-  static noGateForShip(system, fleet) {
+  static contractBrokenGateBlocked (contract){
+    // TODO: implement  
+  }
+  static noGateForFleet(system, fleet) {
     // TODO: implement
   }
-
+  static gateBlockedForFleet (system, fleet){
+    // TODO: implement
+  } 
   static invaded(system, attacker) {
     // TODO: implement
   }

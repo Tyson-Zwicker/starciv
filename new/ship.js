@@ -4,5 +4,5 @@ export default class Ship {
   frieghter = false;
   contract = undefined; //Only Freighters have these
   owner = undefined;
-  currentFleet = undefined;
+  fleet = undefined;
 }

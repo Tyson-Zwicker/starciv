@@ -1,13 +1,16 @@
 
 
 export default class Gate {
+  static defaultCost = 10;
   static nextID = 0;
+  
   ID = 0;
   system = undefined;
   assistIncoming = false;
   assistOutgoing = false;
   blocked = false;
   fixDestination = undefined; //Set to a system if created by a Gateship.
+  cost = defaultCost; //This can be reduced or increased on a gate by gate basis for reasons I have not yet invented...
 }
 
 //Gateships create gates which can recieve from

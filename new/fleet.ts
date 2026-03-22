@@ -1,16 +1,16 @@
-import {Ship} from './ship';
-import {Orders} from './orders';
-import {Civilization} from './civilization';
+import { Ship } from './ship';
+import { Orders } from './orders';
+import { Civilization } from './civilization';
 
-export type Fleet  = {  
+export type Fleet = {
   ships: Ship[];
   owner: Civilization;
-  orders?: Orders;
+  orders: Orders | undefined;
   gateShip: boolean;
 }
 
 export namespace Fleet {
-  export function onlyFreighters(fleet:Fleet): boolean {
+  export function onlyFreighters(fleet: Fleet): boolean {
     return fleet.ships.every((ship) => ship.isFreighter);
   }
 }

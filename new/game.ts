@@ -13,13 +13,9 @@ import {War} from './war';
 import { RESOURCES, Resource } from './types';
 
 export default class Game {
-  static resources: Resource[] = [...RESOURCES];
-
   gates = new Map<number, Gate>();
-  gatePackets: any[] = [];
-  nonGatePackets: any[] = [];
-  arrivals: any[] = [];
-  civilizations = new Map<number, Civilization>();
+  arrivals: Traffic[] = [];
+  civilizations:Civilization[] = [];
   systems = new Map<number, System>();
   gameover = false;
 
@@ -33,7 +29,7 @@ export default class Game {
 
       for (const probe of Traffic.getArrivedProbes(civ)) {
         Diplomacy.probeHasArrived?.(probe.owner, probe.destination); // TODO: probeHasArrived..
-        civ.systems.known.set(probe.destination.id, probe.destination);
+        Civilization.addKnownSystem(civ, probe.destination);
       }
 
       for (const gateShip of Traffic.getArrivedGateShips(civ)) {
@@ -44,16 +40,16 @@ export default class Game {
         }
       }
 
-      for (const system of civ.systems.settled.values()) {
+      for (const system of civ.systems.settled) {
         // Fill outgoing freighters in all fleets. (before sending because fleet could have more than one contracted freighter)
-        for (const freighter of system.allFreighters.values()) {
+        for (const freighter of system.allFreighters) {
           const terms = freighter.contract;
           if (terms && terms.destination !== system) {
             if (Traffic.areGatesAvailable(system, terms.destination)) {
               const filled = Trade.fillOutgoingFreighter(freighter, system, terms);
               if (!filled) Diplomacy.contractBrokenNoResources(terms);
             } else {
-              Diplomacy.contractBrokenNoGate(freighter.contract);
+              Diplomacy.contractBrokenNoGate(freighter.contract!);
             }
           }
         }
@@ -122,7 +118,7 @@ export default class Game {
         // Now process individual planets...
         for (const planet of system.planets.values()) {
           // Deal with the Resource extraction
-          for (const resource of Game.resources) {
+          for (const resource of RESOURCES) {
             const production = Economy.calculateProduction(civ, planet, resource);
             Planet.addStores(planet, resource as Resource, production);
           }

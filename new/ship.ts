@@ -7,7 +7,8 @@ export type Ship = {
   contract: Contract|undefined; // Only freighters use this; remains loosely typed for now.
   owner: Civilization;
   fleet: Fleet;
-  shipClass: string; //TODO: make this a type at somepoint..
+  amountCarried: number;
+  shipClass: string; //TODO: make this a type at some point..
   //TODO: Make freighter a type that inherits from ship...
 }
 export namespace Ship {
@@ -17,7 +18,8 @@ export namespace Ship {
       "fleet": fleet,
       "owner":owner,
       "isFreighter": isFreighter,
-      "contract": undefined
+      "contract": undefined,
+      "amountCarried":0
     };
   }
 }

@@ -1,13 +1,29 @@
-import System from './system';
+import { System } from './system';
+import { Civilization } from './civilization';
+import { Fleet } from './fleet';
 
-export default class Traffic {
-  static traffic: any[] = [];
-  static nonGateTraffic: any[] = [];
-  static arrivals: any[] = [];
-  static nonGateSpeedModifier = 0.01;
-  static gateShipModifier = 0.2;
+export type Traffic = {
+  origin: System,
+  destination: System,
+  fleet: Fleet
+  remaining: number;
+}
 
-  static areGatesAvailable(origin: any, destination: any) { // systems - calculate when entering "gate space"
+export namespace Traffic {
+  export const nonGateTraffic: Fleet[] = [];
+  export const arrivals: Fleet[] = [];
+  export const nonGateSpeedModifier = 0.01;
+  export const gateShipModifier = 0.2;
+  export const traffic: Traffic[] = [];
+  export function make(fleet: Fleet, origin: System, destination: System, remaining: number): Traffic {
+    return {
+      "fleet": fleet,
+      "origin": origin,
+      "destination": destination,
+      "remaining": remaining
+    }
+  }
+  export function areGatesAvailable(origin: System, destination: System): boolean { // systems - calculate when entering "gate space"
     let available = false;
     for (const gate of origin.gates) {
       if (!gate.fixedDestination || gate.fixedDestination === destination) {
@@ -25,7 +41,7 @@ export default class Traffic {
     return false;
   }
 
-  static getSpeed(origin: any, destination: any) { // gates - recalculate every turn because gate status can change.
+  export function getSpeed(origin: System, destination: System): number { // gates - recalculate every turn because gate status can change.
     let speed = 1;
     if (origin.assistOutgoing) speed++;
     if (destination.assistIncoming) speed++;
@@ -33,8 +49,8 @@ export default class Traffic {
     return speed;
   }
 
-  static addGateTraffic(fleet: any, origin: any, destination: any) {
-    if (fleet.gateShip && fleet.owner?.systems?.known?.has(destination.id) && System.hasUnfixedGate(origin)) {
+  export function addGateTraffic(fleet: Fleet, origin: System, destination: System): boolean {
+    if (fleet.gateShip && fleet.owner.systems.known.includes(destination) && System.hasUnfixedGate(origin)) {
       Traffic.traffic.push({
         fleet,
         origin,
@@ -44,22 +60,17 @@ export default class Traffic {
       return true;
     }
     if (Traffic.areGatesAvailable(origin, destination)) {
-      Traffic.traffic.push({
-        fleet,
-        origin,
-        destination,
-        remaining: System.calcDistance(origin, destination)
-      });
+      Traffic.traffic.push(Traffic.make(fleet, origin, destination, System.calcDistance(origin, destination)));
       return true;
     }
     return false;
   }
 
-  static clearArrivals() {
-    Traffic.arrivals = [];
+  export function clearArrivals(): void {
+    Traffic.arrivals.length=0;
   }
 
-  static moveGateTraffic() {
+  export function moveGateTraffic(): void {
     const keep: any[] = [];
     for (const traffic of Traffic.traffic) {
       const speed = Traffic.getSpeed(traffic.origin, traffic.destination);
@@ -77,7 +88,7 @@ export default class Traffic {
     Traffic.traffic = keep;
   }
 
-  static moveNonGateTraffic() {
+  export function moveNonGateTraffic(): void {
     const keep: any[] = [];
     for (const traffic of Traffic.nonGateTraffic) {
       traffic.remaining -= 1 * Traffic.nonGateSpeedModifier;
@@ -90,29 +101,25 @@ export default class Traffic {
     Traffic.nonGateTraffic = keep;
   }
 
-  static addNonGateTraffic(fleet: any, origin: any, destination: any) {
-    Traffic.nonGateTraffic.push({
-      fleet,
-      origin,
-      destination,
-      remaining: System.calcDistance(origin, destination)
+  export function addNonGateTraffic(fleet: Fleet, origin: System, destination: System): boolean {
+    Traffic.nonGateTraffic.push(Traffic.make(fleet, origin, destination, remaining: System.calcDistance(origin, destination)
     });
-    return true;
-  }
+  return true;
+}
 
-  static getArrivalsForSystem(system: any) {
-    const localArrivals = [] as any[];
-    for (const traffic of Traffic.arrivals) {
-      if (traffic.destination === system) localArrivals.push(traffic.fleet);
-    }
-    return localArrivals;
+export function getArrivalsForSystem(system: System) {
+  const localArrivals = [] as any[];
+  for (const traffic of Traffic.arrivals) {
+    if (traffic.destination === system) localArrivals.push(traffic.fleet);
   }
+  return localArrivals;
+}
 
-  static getArrivedProbes(_civ: any) {
-    return [] as any[]; // TODO: implement probe tracking.
-  }
+export function getArrivedProbes(_civ: Civilization) {
+  return [] as any[]; // TODO: implement probe tracking.
+}
 
-  static getArrivedGateShips(_civ: any) {
-    return [] as any[]; // TODO: implement gate ship tracking.
-  }
+export function getArrivedGateShips(_civ: Civilization) {
+  return [] as any[]; // TODO: implement gate ship tracking.
+}
 }

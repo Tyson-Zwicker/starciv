@@ -5,7 +5,7 @@ export type ContractDirection = -1 | 0 | 1;
 export type Contract = {
   origin: any;
   destination: any;
-  resource: string;
+  resource: Resource;
   amount: number;
   direction: ContractDirection;
 };

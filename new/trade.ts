@@ -1,18 +1,24 @@
-export default class Trade {
+import {Contract} from './contract';
+import {Ship} from './ship';
+import {System} from './system';
+import {Orders} from './orders';
 
-  static fillOutgoingFreighter(freighter: any, system: any, terms: any) {
-    if (system.stores[terms.resource] >= terms.amount) {
-      system.stores[terms.resource] -= terms.amount;
-      freighter[terms.resource] = terms.amount;
+
+export namespace Trade {
+
+  export function fillOutgoingFreighter(freighter: Ship, system: System, contract: Contract):boolean{
+    if (system.stores[contract.resource] >= contract.amount) {
+      system.stores[contract.resource] -= contract.amount;
+      freighter.amountCarried = contract.amount;
       if (freighter.fleet) {
-        freighter.fleet.outgoing = { destination: terms.destination };
+        freighter.fleet.orders = Orders.make (system, contract.destination, false);
       }
       return true;
     }
     return false;
   }
 
-  static acceptIncomingGoods(system: any, incomingFreighters: any[]) {
+  export function acceptIncomingGoods(_system: System, _incomingFreighters: Ship[]):void {
     // TODO: implement
   }
 }

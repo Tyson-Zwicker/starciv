@@ -10,7 +10,7 @@ export type Traffic = {
 }
 
 export namespace Traffic {
-  export const nonGateTraffic: Fleet[] = [];
+  export const nonGateTraffic: Traffic[] = [];
   export const arrivals: Fleet[] = [];
   export const nonGateSpeedModifier = 0.01;
   export const gateShipModifier = 0.2;
@@ -43,9 +43,9 @@ export namespace Traffic {
 
   export function getSpeed(origin: System, destination: System): number { // gates - recalculate every turn because gate status can change.
     let speed = 1;
-    if (origin.assistOutgoing) speed++;
-    if (destination.assistIncoming) speed++;
-    if (destination.blocked) speed -= 0.5;
+    if (System.gateAssistsOutgoing(origin)) speed++;
+    if (System.gateAssistsIncoming(destination)) speed++;
+    if (System.gateBlocked(destination)) speed = speed / 4;
     return speed;
   }
 
@@ -67,7 +67,7 @@ export namespace Traffic {
   }
 
   export function clearArrivals(): void {
-    Traffic.arrivals.length=0;
+    Traffic.arrivals.length = 0;
   }
 
   export function moveGateTraffic(): void {
@@ -82,10 +82,11 @@ export namespace Traffic {
       if (traffic.remaining > 0) {
         keep.push(traffic);
       } else {
-        Traffic.arrivals.push(traffic);
+        Traffic.arrivals.push(traffic.fleet);
       }
     }
-    Traffic.traffic = keep;
+    Traffic.traffic.length = 0;
+    Traffic.traffic.push(...keep);
   }
 
   export function moveNonGateTraffic(): void {
@@ -95,31 +96,31 @@ export namespace Traffic {
       if (traffic.remaining > 0) {
         keep.push(traffic);
       } else {
-        Traffic.arrivals.push(traffic);
+        Traffic.arrivals.push(traffic.fleet);
       }
     }
-    Traffic.nonGateTraffic = keep;
+    Traffic.nonGateTraffic.length = 0;
+    Traffic.nonGateTraffic.push(...keep);
   }
 
   export function addNonGateTraffic(fleet: Fleet, origin: System, destination: System): boolean {
-    Traffic.nonGateTraffic.push(Traffic.make(fleet, origin, destination, remaining: System.calcDistance(origin, destination)
-    });
-  return true;
-}
-
-export function getArrivalsForSystem(system: System) {
-  const localArrivals = [] as any[];
-  for (const traffic of Traffic.arrivals) {
-    if (traffic.destination === system) localArrivals.push(traffic.fleet);
+    Traffic.nonGateTraffic.push(Traffic.make(fleet, origin, destination, System.calcDistance(origin, destination)));
+    return true;
   }
-  return localArrivals;
-}
 
-export function getArrivedProbes(_civ: Civilization) {
-  return [] as any[]; // TODO: implement probe tracking.
-}
+  export function getArrivalsForSystem(system: System) {
+    const localArrivals:Fleet[] = [];
+    for (const fleet of Traffic.arrivals) {
+      if (fleet.orders!.destination === system) localArrivals.push(fleet);
+    }
+    return localArrivals;
+  }
 
-export function getArrivedGateShips(_civ: Civilization) {
-  return [] as any[]; // TODO: implement gate ship tracking.
-}
+  export function getArrivedProbes(_civ: Civilization) {
+    return [] as any[]; // TODO: implement probe tracking.
+  }
+
+  export function getArrivedGateShips(_civ: Civilization) {
+    return [] as any[]; // TODO: implement gate ship tracking.
+  }
 }

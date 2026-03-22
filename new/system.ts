@@ -1,8 +1,8 @@
-import {Fleet} from './fleet';
-import {Gate} from './gate';
-import {Planet} from './planet';
-import {Ship} from './ship';
-import {Civilization} from './civilization';
+import { Fleet } from './fleet';
+import { Gate } from './gate';
+import { Planet } from './planet';
+import { Ship } from './ship';
+import { Civilization } from './civilization';
 import { Coordinates, RESOURCES, Resource } from './types';
 
 export type System = {
@@ -15,10 +15,28 @@ export type System = {
   unusedFreighters: Ship[]; //These are put there per turn, and popped off when used..
   gates: Gate[];
   defence: number;
-  owner: Civilization;  
+  owner: Civilization;
 }
 
 export namespace System {
+  export function gateAssistsOutgoing(system: System): boolean {
+    for (let gate of system.gates) {
+      if (gate.assistOutgoing) return true;
+    }
+    return false;
+  }
+  export function gateAssistsIncoming (system: System): boolean {
+    for (let gate of system.gates) {
+      if (gate.assistIncoming) return true;
+    }
+    return false;
+  }
+  export function gateBlocked (system: System):boolean{
+    for (let gate of system.gates) {
+      if (gate.blocked) return true;
+    }
+    return false;
+  }
   export function hasUnfixedGate(system: System) {
     for (const gate of system.gates) {
       if (!gate.fixedDestination) return true;
@@ -28,32 +46,32 @@ export namespace System {
 
   export function removeFreighters(system: System, fleet: Fleet) {
     for (const ship of fleet.ships) {
-      system.freighters =  system.freighters.filter (s => s!==ship);
-      system.allFreighters = system.allFreighters.filter (s => s!==ship);      
+      system.freighters = system.freighters.filter(s => s !== ship);
+      system.allFreighters = system.allFreighters.filter(s => s !== ship);
     }
   }
 
   export function removeFleet(system: System, fleet: Fleet) {
-    system.fleets = system.fleets.filter (f => f!==fleet);
+    system.fleets = system.fleets.filter(f => f !== fleet);
   }
 
   export function addFleet(system: System, fleet: Fleet) {
-    if (!system.fleets.includes (fleet)) system.fleets.push (fleet);
+    if (!system.fleets.includes(fleet)) system.fleets.push(fleet);
   }
 
   export function addToAllFreighters(system: System, freighter: Ship) {
-    if (!system.allFreighters.includes (freighter)) system.allFreighters.push (freighter);    
+    if (!system.allFreighters.includes(freighter)) system.allFreighters.push(freighter);
   }
 
   export function berthOwnFreighter(system: System, freighter: Ship) {
-    if (!system.freighters.includes (freighter)) system.freighters.push (freighter);    
+    if (!system.freighters.includes(freighter)) system.freighters.push(freighter);
   }
 
   export function calcDistance(system: System, otherSystem: System) {
     return Math.hypot(system.location.x - otherSystem.location.x, system.location.y - otherSystem.location.y);
   }
 
-  export function collectivizeResources(system: System) {    
+  export function collectivizeResources(system: System) {
     for (const planet of system.planets.values()) {
       for (const resource of RESOURCES) {
         if (planet.stores[resource as Resource] > 0) {

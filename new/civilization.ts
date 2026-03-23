@@ -1,5 +1,5 @@
 import {System} from './system';
-import {ResourceModifier} from './resources';
+import {ResourceModifier} from './economy';
 export type Civilization = {
   systems: { known: System[]; settled: System[]};
   stores: { money: number; tech: number };

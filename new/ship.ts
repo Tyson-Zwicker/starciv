@@ -19,7 +19,7 @@ export namespace Ship {
       "fleet": fleet,
       "owner":owner,
       "isFreighter": isFreighter,
-      "isGateship": isGateShip,
+      "isGateship": isGateship,
       "contract": undefined,
       "amountCarried":0
     };

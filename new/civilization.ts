@@ -3,6 +3,7 @@ import {ResourceModifier} from './resources';
 export type Civilization = {
   systems: { known: System[]; settled: System[]};
   stores: { money: number; tech: number };
+  resourceModifier : ResourceModifier;
   tech: ResourceModifier;
   money: number;
   friends: Civilization[];

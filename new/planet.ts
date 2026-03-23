@@ -1,43 +1,28 @@
 import { System } from './system';
-import { RESOURCETYPES, ResourceTypes, ResourceModifier, ResourceCollection } from './resources';
+import {Resource, ResourceType, Job, OrbitalItemType} from './economy';
 
 export type Planet = {
+  name: string;
   population: number;
-  workerSlots: Record<ResourceTypes | 'factory' | 'orbital', number>;
-  resources : ResourceModifier;
-  infrastructure: ResourceModifier;
-  stores: ResourceCollection;  
+  resources : Record <ResourceType,number>; //is a modifier
+  infrastructure : Record <ResourceType,number>;   //is a modifier for RESOURCE extraction 
+  jobAssignments:Record<Job,number>; 
+  stores: Record<ResourceType,number>;  //is a collection
   orbitals: number;
   system: System;
+  engineeringGoal: ResourceType | undefined;
+  orbitalBuildGoal: OrbitalItemType | undefined;
 }
 export namespace Planet {
-  export function make(system: System, name: string, resources: ResourceModifier) {
 
-    let stores: Record<ResourceTypes, number> = {} as Record<ResourceTypes, number>;
-    let workerslots: Record<ResourceTypes, number> = {} as Record<ResourceTypes, number>;
-    let infrastructure: Record<ResourceTypes, number> = {} as Record<ResourceTypes, number>;
-    for (const resource of RESOURCETYPES) {
-      stores[resource] = 0;
-      workerslots[resource] = 0;
-      infrastructure[resource] = 0;
-    }
-    return {
-      "name": name,
-      "system": system,
-      "resources": resources,
-      "stores": stores,
-      "infrastructure": infrastructure,
-      "orbitals": 0
-    }
-  }
 
-  export function addStores(planet: Planet, resources: ResourceCollection) {
-    for (const resource of RESOURCETYPES) {
+  export function addStores(planet: Planet, resources: Record<ResourceType,number>) {
+    for (const resource of Resource.ResourceTypes) {
       planet.stores[resource] = planet.stores[resource] + resources[resource];
     }
   }
 
-  export function feedPopulation(planet: Planet) {
+ export function feedPopulation(planet: Planet) {
     if (planet.population <= planet.stores.food) {
       planet.stores.food -= planet.population;
       return 0;

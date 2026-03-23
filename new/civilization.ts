@@ -1,8 +1,10 @@
 import {System} from './system';
-
+import {ResourceModifier} from './resources';
 export type Civilization = {
   systems: { known: System[]; settled: System[]};
   stores: { money: number; tech: number };
+  tech: ResourceModifier;
+  money: number;
   friends: Civilization[];
   enemies: Civilization[];
   infrastructureCost: number;

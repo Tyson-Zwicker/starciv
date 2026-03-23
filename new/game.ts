@@ -1,6 +1,6 @@
 import {Civilization} from './civilization';
 import {Contract} from './contract';
-import {Diplomacy} from './diplomacy';
+import {Notification} from './notification';
 import {Economy} from './economy';
 import {Fleet} from './fleet';
 import {Gate} from './gate';
@@ -10,7 +10,6 @@ import {System} from './system';
 import {Trade} from './trade';
 import {Traffic} from './traffic';
 import {War} from './war';
-import { RESOURCES, Resource } from './types';
 
 export default class Game {
   gates = new Map<number, Gate>();
@@ -23,12 +22,12 @@ export default class Game {
     Traffic.clearArrivals();
     Traffic.moveGateTraffic();
     Traffic.moveNonGateTraffic();
-
+    //TODO: Cancel standing orders of fleets once they have arrived UNLESS they are freighters with a contract that specifies a return trip..
     for (const civ of this.civilizations.values()) {
       civ.infrastructureCost = 0; // Calculated at the end of the turn.
 
       for (const probe of Traffic.getArrivedProbes(civ)) {
-        Diplomacy.probeHasArrived?.(probe.owner, probe.destination); // TODO: probeHasArrived..
+        Notification.probeHasArrived?.(probe.owner, probe.destination); // TODO: probeHasArrived..
         Civilization.addKnownSystem(civ, probe.destination);
       }
 
@@ -47,9 +46,9 @@ export default class Game {
           if (terms && terms.destination !== system) {
             if (Traffic.areGatesAvailable(system, terms.destination)) {
               const filled = Trade.fillOutgoingFreighter(freighter, system, terms);
-              if (!filled) Diplomacy.contractBrokenNoResources(terms);
+              if (!filled) Notification.contractBrokenNoResources(terms);
             } else {
-              Diplomacy.contractBrokenNoGate(freighter.contract!);
+              Notification.contractBrokenNoGate(freighter.contract!);
             }
           }
         }
@@ -64,7 +63,7 @@ export default class Game {
               continue;
             }
           }
-          Diplomacy.gateBlockedForFleet(system, fleet);
+          Notification.gateBlockedForFleet(system, fleet);
         }
 
         // Deal with arrivals..
@@ -74,7 +73,7 @@ export default class Game {
         const conflicts: Fleet[] = [];
         for (const fleet of arrivals) {
           if (fleet.orders?.hostile) {
-            const resolvedPeacefully = Diplomacy.underAttack(system, fleet);
+            const resolvedPeacefully = Notification.underAttack(system, fleet);
             if (!resolvedPeacefully) conflicts.push(fleet);
           }
         }
@@ -82,7 +81,7 @@ export default class Game {
         // Deal with actual conflicts..
         for (const fleet of conflicts) {
           const victory = War.battle(system, fleet);
-          Diplomacy.battleConcluded(system, fleet, victory);
+          Notification.battleConcluded(system, fleet, victory);
         }
 
         // Now that the fighting is done.. add surviving arrivals to system fleets list..
@@ -110,18 +109,18 @@ export default class Game {
         for (const freighter of incomingFreighters) {
           if (freighter.contract && !Contract.nextPhase(freighter.contract)) {
             freighter.contract = undefined;
-            if (freighter.fleet?.owner !== civ) Diplomacy.youCannotParkFreighterHere(freighter);
+            if (freighter.fleet?.owner !== civ) Notification.youCannotParkFreighterHere(freighter);
           }
         }
         // ** Arrivals all sorted! **
 
         // Now process individual planets...
-        for (const planet of system.planets.values()) {
+        for (const planet of system.planets) {
           // Deal with the Resource extraction
-          for (const resource of RESOURCES) {
-            const production = Economy.calculateProduction(civ, planet, resource);
-            Planet.addStores(planet, resource as Resource, production);
-          }
+          
+            const production = Economy.generateResources(planet);
+            Planet.addStores(planet, production);
+          
 
           // Deal with food and population growth..
           const shortfall = Planet.feedPopulation(planet); // Will try to use system stores if shortfall occurs..

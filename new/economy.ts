@@ -1,24 +1,25 @@
-import {Civilization} from './civilization';
-import {Planet} from './planet';
-import {Resource} from './types';
+import { Planet } from './planet';
+import { ResourceTypes, RESOURCETYPES } from './resources';
 
 export namespace Economy {
-  export function calculateProduction(_civ:Civilization, _planet:Planet, _resource:Resource) {
-    // TODO: implement
-    return 0;
+  export function generateResources(planet: Planet) {
+    const collected: Record<ResourceTypes, number> = {} as Record<ResourceTypes, number>;
+    for (const resource of RESOURCETYPES) {
+      const p = planet.resources[resource];
+      const w = planet.workerSlots[resource];
+      const i = planet.infrastructure[resource];
+      const t = planet.system.owner.tech[resource];
+      collected[resource] = p * w * i * t;
+    }
+    return collected;
   }
 
-  export function feedPopulation(_planet:Planet) {
-    // TODO: implement
-    return 0;
-  }
-
-  export function groundProduction(_planet:Planet) {
+  export function groundProduction(_planet: Planet) {
     // TODO: implement
     //Remember to diminish this if the civ has no money..
   }
 
-  export function orbitalProduction(_planet:Planet) {
+  export function orbitalProduction(_planet: Planet) {
     // TODO: implement
     //Remember to diminish this if the civ has no money..
   }

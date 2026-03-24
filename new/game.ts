@@ -24,7 +24,7 @@ export default class Game {
     Traffic.moveNonGateTraffic();
     //TODO: Cancel standing orders of fleets once they have arrived UNLESS they are freighters with a contract that specifies a return trip..
     for (const civ of this.civilizations.values()) {
-      civ.infrastructureCost = 0; // Calculated at the end of the turn.
+      let infrastructureCost = 0; // Calculated at the end of the turn.
 
       for (const probe of Traffic.getArrivedProbes(civ)) {
         Notification.probeHasArrived?.(probe.owner, probe.destination); // TODO: probeHasArrived..
@@ -131,16 +131,16 @@ export default class Game {
           }
 
           // Build things..
-          Economy.groundProduction(planet);
+          Economy.infrastructureProduction(planet);
           Economy.orbitalProduction(planet);
         }
         // Collect the stuff into system's stores..
         System.collectivizeResources(system);
-        civ.infrastructureCost += System.calculateInfrastructureCost(system);
+        infrastructureCost += System.calculateInfrastructureCost(system);
       }
       // Collect money into the big pot..
       Civilization.collectTaxes(civ);
-      Civilization.payForInfrastructure(civ);
+      Civilization.payForInfrastructure(civ, infrastructureCost);
     }
   }
 }

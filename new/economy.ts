@@ -3,10 +3,11 @@ export type ResourceType = 'food' | 'ore' | 'gas' | 'tech' | 'money';
 export namespace Resource {
   export const ResourceTypes: ResourceType[] = ['food', 'ore', 'gas', 'tech', 'money'];
 }
-export type ResourceModifier = Record<ResourceType, number>;
-export type InfrastructureType = 'farms' | 'mines' | 'refineries' | 'labs' | 'banks';
+
+//export type InfrastructureType = 'farms' | 'mines' | 'refineries' | 'labs' | 'banks';
 export namespace Infrastructure {
-  export const baseModifier = 0.1;
+  export const buildInfrastructureModifier = 0.1; //Used Gamewide, is the same for everybody, applies to all types of infrastructure..
+  export const orbitalCost = 1; // used Gamewide, is same for everyone
 }
 export type Job = 'farmer' | 'miner' | 'refiner' | 'researcher' | 'banker' | 'orbiter' | 'engineer'; //Orbital constructore builds ships, probes and orbitals themselves
 
@@ -37,59 +38,60 @@ export namespace OrbitalItems {
   }
 }
 
-export function generateResources(planet: Planet) {
-  const collected: Record<ResourceType, number> = {} as Record<ResourceType, number>;
-  for (const resource of Resource.ResourceTypes) {
-    let collectedThisResource = 0;
-    for (const job of Job.Jobs) {
-      if (Job.JobProduct[job] === resource) {
-        const c = planet.system.owner.resourceModifier[resource];
-        const p = planet.resources[resource];
-        const w = planet.jobAssignments[job];
-        const i = planet.infrastructure[resource];
-        const t = planet.system.owner.tech[resource];
-        collectedThisResource += w * i * t * p * c;
-      }
 
-      collected[resource] = collectedThisResource;
+//TODO: Add notifications when things get done- or can't be!
+export namespace Economy {
+  export function generateResources(planet: Planet) {
+    const collected: Record<ResourceType, number> = {} as Record<ResourceType, number>;
+    for (const resource of Resource.ResourceTypes) {
+      let collectedThisResource = 0;
+      for (const job of Job.Jobs) {
+        if (Job.JobProduct[job] === resource) {
+          const c = planet.system.owner.resourceModifier[resource];
+          const p = planet.resourceModifier[resource];
+          const w = planet.jobAssignments[job];
+          const i = planet.infrastructureModifier[resource]; //how good is the infrastucture on the planet
+          const t = planet.system.owner.tech;
+          collectedThisResource += w * i * t * p * c;
+        }
+
+        collected[resource] = collectedThisResource;
+      }
+    }
+    return collected;
+  }
+
+  export function infrastructureProduction(planet: Planet) {
+    if (planet.engineeringGoal) {
+      const w = planet.jobAssignments['engineer'];
+      const goal = planet.engineeringGoal;
+      const c = planet.system.owner.resourceModifier[goal];
+      //TODO: Check for materials on hand.. ore, gas & money..(uses systems resourceCollection)
+      const i = Infrastructure.buildInfrastructureModifier; //How hard is it to make infrastrucutre?
+      const t = planet.system.owner.tech;
+      planet.infrastructureModifier[goal] += w * i * t * c;
     }
   }
-  return collected;
-}
 
-export function infrastructureProduction(planet: Planet) {
-  if (planet.engineeringGoal) {
-    const w = planet.jobAssignments['engineer'];
-    const goal = planet.engineeringGoal;
-    const c = planet.system.owner.resourceModifier[goal];
-    //TODO: Check for materials on hand.. ore, gas & money..(uses systems resourceCollection)
-    const i = Infrastructure.baseModifier;;
-    const t = planet.system.owner.tech[goal];
-    planet.infrastructure[goal] += w * i * t * c;
-  }
-}
-
-
-export function orbitalProduction(planet: Planet) {
-  // TODO: implement
-  //Remember to diminish this if the civ has no money..
-  if (planet.orbitals < 1) {
-    //The only thing you can build with workers assigned to orbital work, when you don't have an orbital, is an orbital..
-    //Check if they have the materials on hand.. ore, gas & money (uses systems resourceCollection)
-    const w = planet.jobAssignments['orbiter'];
-    const d = OrbitalItems.difficultyModifier['orbital'];
-    planet.orbitals += w * d;
-  } else {
-    const goal = planet.orbitalBuildGoal;
-    if (goal) {
+  export function orbitalProduction(planet: Planet) {
+    if (planet.orbitals < 1) {
+      //The only thing you can build with workers assigned to orbital work, when you don't have an orbital, is an orbital..
       //Check if they have the materials on hand.. ore, gas & money (uses systems resourceCollection)
       const w = planet.jobAssignments['orbiter'];
-      const d = OrbitalItems.difficultyModifier[goal];
+      const d = OrbitalItems.difficultyModifier['orbital'];
       planet.orbitals += w * d;
+    } else {
+      const goal = planet.orbitalBuildGoal;
+      if (goal) {
+        //TODO:Check if they have the materials on hand.. ore, gas & money (uses systems resourceCollection)
+        const w = planet.jobAssignments['orbiter'];
+        const d = OrbitalItems.difficultyModifier[goal];
+        const t = planet.system.owner.tech;
+        planet.orbitals += w * d * t;
+      }
     }
   }
 }
-
 
 /* Money
 

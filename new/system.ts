@@ -4,11 +4,11 @@ import { Planet } from './planet';
 import { Ship } from './ship';
 import { Civilization } from './civilization';
 import { Coordinates} from './types';
-import { ResourceTypes, RESOURCETYPES, ResourceCollection } from './resources';
+import { Resource, ResourceType, Infrastructure } from './economy';
 
 export type System = {
   location: Coordinates;
-  stores: ResourceCollection;
+  stores: Record <ResourceType,number>;
   planets: Planet[];
   fleets: Fleet[];
   freighters: Ship[]; // Own freighters only.
@@ -74,10 +74,10 @@ export namespace System {
 
   export function collectivizeResources(system: System) {
     for (const planet of system.planets.values()) {
-      for (const resource of RESOURCETYPES) {
-        if (planet.stores[resource as ResourceTypes] > 0) {
-          system.stores[resource] += planet.stores[resource as ResourceTypes];
-          planet.stores[resource as ResourceTypes] = 0;
+      for (const resource of Resource.ResourceTypes) {
+        if (planet.stores[resource] > 0) {
+          system.stores[resource] += planet.stores[resource];
+          planet.stores[resource] = 0;
         }
       }
     }
@@ -85,12 +85,12 @@ export namespace System {
 
   export function calculateInfrastructureCost(system: System) {
     let cost = 0;
-    const resources: ResourceTypes[] = ['food', 'ore', 'gas'];
+    const resources: ResourceType[] = ['food', 'ore', 'gas'];
     for (const planet of system.planets.values()) {
       for (const resource of resources) {
-        cost += (planet.infrastructure[resource] ?? 0) - 1; // Base line infrastructure is free.
+        cost += planet.infrastructureModifier[resource]; // Base line infrastructure is free.
       }
-      cost += planet.orbitals;
+      cost += planet.orbitals* Infrastructure.orbitalCost;
     }
     for (const gate of system.gates) {
       cost += gate.cost;

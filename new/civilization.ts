@@ -1,14 +1,14 @@
 import {System} from './system';
-import {ResourceModifier} from './economy';
+import {ResourceType, OrbitalItemType} from './economy';
 export type Civilization = {
   systems: { known: System[]; settled: System[]};
   stores: { money: number; tech: number };
-  resourceModifier : ResourceModifier;
-  tech: ResourceModifier;
+  resourceModifier : Record<ResourceType, number>;
+  orbitalItemModifer: Record<OrbitalItemType,number>;
   money: number;
   friends: Civilization[];
   enemies: Civilization[];
-  infrastructureCost: number;
+  tech :number;
 }
 
 export namespace Civilization {
@@ -21,8 +21,10 @@ export namespace Civilization {
       system.stores.money = 0;
     }
   }
-  export function payForInfrastructure(civ: Civilization) {
-    const moneyRemaining = civ.stores.money - civ.infrastructureCost;
+  export function payForInfrastructure(civ: Civilization, infrastructureCost: number):void {
+    //Pay for resource extraction infrastructure;
+    //Infrastructure costs even if it isn't used this turn...
+    const moneyRemaining = civ.stores.money - infrastructureCost;
     if (moneyRemaining < -1) civ.stores.money = -1;
   }
 }

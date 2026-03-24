@@ -4,8 +4,8 @@ import {Resource, ResourceType, Job, OrbitalItemType} from './economy';
 export type Planet = {
   name: string;
   population: number;
-  resources : Record <ResourceType,number>; //is a modifier
-  infrastructure : Record <ResourceType,number>;   //is a modifier for RESOURCE extraction 
+  resourceModifier : Record <ResourceType,number>; //is a modifier
+  infrastructureModifier : Record <ResourceType,number>;   //is a modifier for RESOURCE extraction 
   jobAssignments:Record<Job,number>; 
   stores: Record<ResourceType,number>;  //is a collection
   orbitals: number;
@@ -14,8 +14,7 @@ export type Planet = {
   orbitalBuildGoal: OrbitalItemType | undefined;
 }
 export namespace Planet {
-
-
+  
   export function addStores(planet: Planet, resources: Record<ResourceType,number>) {
     for (const resource of Resource.ResourceTypes) {
       planet.stores[resource] = planet.stores[resource] + resources[resource];

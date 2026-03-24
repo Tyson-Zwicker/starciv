@@ -1,18 +1,18 @@
 import {System} from './system';
-import {ResourceTypes} from './types';
+import {ResourceType} from './economy';
 export type ContractDirection = -1 | 0 | 1;
 
 export type Contract = {
   origin: any;
   destination: any;
-  resource: ResourceTypes;
+  resource: ResourceType;
   amount: number;
   direction: ContractDirection;
 };
 
 export namespace Contract {
   // Direction 0 or 1 = going to destination, -1 = returning, 0 = one way.
-  export function makeContract(origin: System, destination: System, resource: ResourceTypes, amount: number, direction: ContractDirection): Contract {
+  export function makeContract(origin: System, destination: System, resource: ResourceType, amount: number, direction: ContractDirection): Contract {
     return { origin, destination, resource, amount, direction };
   }
 

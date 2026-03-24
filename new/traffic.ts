@@ -90,6 +90,7 @@ export namespace Traffic {
   }
 
   export function moveNonGateTraffic(): void {
+    //Currently only used for probes..
     const keep: any[] = [];
     for (const traffic of Traffic.nonGateTraffic) {
       traffic.remaining -= 1 * Traffic.nonGateSpeedModifier;

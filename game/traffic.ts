@@ -70,15 +70,6 @@ export namespace Traffic {
     }
   }
   export function addGateTraffic(fleet: Fleet, origin: System, destination: System): boolean {
-    if (fleet.gateShip && fleet.owner.systems.known.includes(destination) && System.hasUnfixedGate(origin)) {
-      Traffic.gateTraffic.push({
-        packet: fleet,
-        origin,
-        destination,
-        remaining: System.calcDistance(origin, destination)
-      });
-      return true;
-    }
     if (Traffic.areGatesAvailable(origin, destination)) {
       Traffic.gateTraffic.push(Traffic.makeGateTraffic(fleet, origin, destination, System.calcDistance(origin, destination)));
       return true;
@@ -115,14 +106,13 @@ export namespace Traffic {
       "remaining": remaining
     }
   }
-  export function addProbeTraffic(probe: Probe, origin: System, destination: System): boolean {
+  export function addProbeTraffic(probe: Probe, origin: System, destination: System): void {
     Traffic.probeTraffic.push({
       packet: probe,
       origin,
       destination,
       remaining: System.calcDistance(origin, destination)
     });
-    return true;
   }
   export function moveProbes(): void {
     //Currently only used for probes..
@@ -158,6 +148,14 @@ export namespace Traffic {
     }
     Traffic.probeTraffic.length = 0;
     Traffic.probeTraffic.push(...keep);
+  }
+  export function addGateShipTraffic(gateShip: GateShip):void {
+    Traffic.gateShipTraffic.push({
+      packet: gateShip,
+      origin: gateShip.origin,
+      destination: gateShip.destination,
+      remaining: System.calcDistance(gateShip.origin, gateShip.destination)
+    });
   }
   export function getArrivedGateShips(system: System): GateShip[] {
     const gateShips: GateShip[] = [];

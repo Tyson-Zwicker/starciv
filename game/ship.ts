@@ -9,7 +9,7 @@ export type Freighter = {
   fleet: Fleet,
   owner: Civilization
 }
-export namespace Freigher {
+export namespace Freighter {
   export function make(system: System, fleet: Fleet): Freighter {
     return {
       "contract": undefined,
@@ -23,10 +23,27 @@ export type Probe = {
   owner: Civilization;
   destination: System;
 }
+export namespace Probe {
+  export function make(owner: Civilization, destination: System): Probe {
+    return {
+      "destination": destination,
+      "owner": owner,
+    };
+  }
+}
 export type GateShip = {
   owner: Civilization;
   origin: System;
   destination: System;
+}
+export namespace GateShip {
+  export function make(owner: Civilization, origin: System, destination: System): GateShip {
+    return {
+      "origin": origin,
+      "destination": destination,
+      "owner": owner,
+    };
+  }
 }
 
 export type ShipClass = {

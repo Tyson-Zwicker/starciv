@@ -61,6 +61,10 @@ export namespace Notification {
 	export function freighterCreated(_freighter: Freighter, _planet: Planet) {
 		throw new Error('Function not implemented.');
 	}
+	export function gateShipCreated( _planet: Planet) :System{
+		throw new Error('Function not implemented.');
+		//Return destination for gateship..
+	}
 	export function shipCreated(_ship: Ship, _planet: Planet) {
 		throw new Error('Function not implemented.');
 	}

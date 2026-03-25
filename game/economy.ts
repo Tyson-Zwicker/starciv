@@ -1,8 +1,9 @@
 import { Planet } from './planet';
 import { Notification } from './notification';
 import { Gate } from './gate';
-//import { Probe} from './ship';
-//import { Traffic } from './traffic';
+import { Freighter, Probe, GateShip } from './ship';
+import { Traffic } from './traffic';
+import { Fleet } from './fleet';
 export type ResourceType = 'food' | 'ore' | 'gas' | 'tech' | 'money';
 export namespace Resource {
   export const ResourceTypes: ResourceType[] = ['food', 'ore', 'gas', 'tech', 'money'];
@@ -29,7 +30,7 @@ export namespace Job {
   };
 }
 
-export type OrbitalItemType = 'none' | 'ship' | 'freighter' | 'probe' | 'defence' | 'gate' | 'orbital';
+export type OrbitalItemType = 'none' | 'ship' | 'freighter' | 'probe' | 'defence' | 'gate' | 'gateship' | 'orbital';
 export type MaterialRequirementType = Extract<ResourceType, 'ore' | 'gas' | 'money'>;
 export type MaterialCost = Record<MaterialRequirementType, number>;
 export namespace OrbitalItems {
@@ -41,7 +42,8 @@ export namespace OrbitalItems {
     'probe': 0.25,
     'defence': 0.1,
     'gate': 0.01,
-    'freighter': 1
+    'freighter': 1,
+    'gateship': 2
   }
 
   export const materialsRequiredForOrbitalItem: Record<OrbitalItemType, MaterialCost> = {
@@ -51,113 +53,118 @@ export namespace OrbitalItems {
     'probe': { ore: 1, gas: 1, money: 1 },
     'defence': { ore: 1, gas: 1, money: 1 },
     'gate': { ore: 1, gas: 1, money: 1 },
-    'freighter': { ore: 1, gas: 1, money: 1 }
+    'freighter': { ore: 1, gas: 1, money: 1 },
+    'gateship': { ore: 1, gas: 1, money: 1 }
   }
-}
-//FIXME: Making OrbitalItemType somewhat dynamic (the ability to add a new Type based on a vessel design)
-// as a way to solve ships being... dynamic?S
 
-export namespace Economy {
-  export function generateResources(planet: Planet) {
-    const collected: Record<ResourceType, number> = {} as Record<ResourceType, number>;
-    for (const resource of Resource.ResourceTypes) {
-      let collectedThisResource = 0;
-      for (const job of Job.Jobs) {
-        if (Job.JobProduct[job] === resource) {
-          const c = planet.system.owner.resourceModifier[resource];
-          const p = planet.resourceModifier[resource];
-          const w = planet.jobAssignments[job];
-          const i = planet.infrastructureModifier[resource]; //how good is the infrastucture on the planet
-          const t = planet.system.owner.tech;
-          let m = 1;
-          if (planet.system.owner.money < 0) m = 0.75;
-          collectedThisResource += w * i * t * p * c * m;
+  export namespace Economy {
+    export function generateResources(planet: Planet) {
+      const collected: Record<ResourceType, number> = {} as Record<ResourceType, number>;
+      for (const resource of Resource.ResourceTypes) {
+        let collectedThisResource = 0;
+        for (const job of Job.Jobs) {
+          if (Job.JobProduct[job] === resource) {
+            const c = planet.system.owner.resourceModifier[resource];
+            const p = planet.resourceModifier[resource];
+            const w = planet.jobAssignments[job];
+            const i = planet.infrastructureModifier[resource]; //how good is the infrastucture on the planet
+            const t = planet.system.owner.tech;
+            let m = 1;
+            if (planet.system.owner.money < 0) m = 0.75;
+            collectedThisResource += w * i * t * p * c * m;
+          }
+          collected[resource] = collectedThisResource;
         }
-        collected[resource] = collectedThisResource;
       }
+      return collected;
     }
-    return collected;
-  }
 
-  function resourcesAvailableForOrbitalItem(planet: Planet) {
-    let materialsNeeded = OrbitalItems.materialsRequiredForOrbitalItem[planet.orbitalBuildGoal];
-    return (planet.system.stores['ore'] >= materialsNeeded['ore'] &&
-      planet.system.stores['gas'] >= materialsNeeded['gas'] &&
-      planet.system.stores['money'] >= materialsNeeded['money']
-    );
-  }
-  export function infrastructureProduction(planet: Planet) {
-    if (planet.engineeringGoal) {
-      const goal = planet.engineeringGoal;
-      const w = planet.jobAssignments['engineer'];
-      const c = planet.system.owner.resourceModifier[goal];
-      const i = Infrastructure.buildInfrastructureModifier; //How hard is it to make infrastrucutre?
-      const t = planet.system.owner.tech;
-      let m = 1;
-      if (planet.system.owner.money < 0) m = 0.1;
-      planet.infrastructureModifier[goal] += w * i * t * c * m;
+    function resourcesAvailableForOrbitalItem(planet: Planet) {
+      let materialsNeeded = OrbitalItems.materialsRequiredForOrbitalItem[planet.orbitalBuildGoal];
+      return (planet.system.stores['ore'] >= materialsNeeded['ore'] &&
+        planet.system.stores['gas'] >= materialsNeeded['gas'] &&
+        planet.system.stores['money'] >= materialsNeeded['money']
+      );
     }
-  }
-
-  export function orbitalProduction(planet: Planet) {
-    const goal = planet.orbitalBuildGoal;
-    if (goal) {
-      if (resourcesAvailableForOrbitalItem(planet)) {
-        const w = planet.jobAssignments['orbiter'];
-        const d = OrbitalItems.difficultyModifier[goal];
+    export function infrastructureProduction(planet: Planet) {
+      if (planet.engineeringGoal) {
+        const goal = planet.engineeringGoal;
+        const w = planet.jobAssignments['engineer'];
+        const c = planet.system.owner.resourceModifier[goal];
+        const i = Infrastructure.buildInfrastructureModifier; //How hard is it to make infrastrucutre?
         const t = planet.system.owner.tech;
         let m = 1;
         if (planet.system.owner.money < 0) m = 0.1;
-        const item = planet.orbitalBuildGoal;
-        let shipModifier = 1; //not affect.
-        if (item === 'ship') {
-          shipModifier += planet.orbitalBuildGoalShipClass.size;
-        }
+        planet.infrastructureModifier[goal] += w * i * t * c * m;
+      }
+    }
 
-        const before = planet.buildProgress[planet.orbitalBuildGoal];
-        planet.buildProgress[planet.orbitalBuildGoal] += w * d * t * m;
-        const after = planet.buildProgress[planet.orbitalBuildGoal];
-        if (after > before) {
-
-          switch (planet.orbitalBuildGoal) {
-            case 'orbital':
-              Notification.orbitalItemCompleted(planet);
-              planet.orbitals++;
-              break;
-            case 'defence':
-              Notification.defencePlatformCompleted(planet);
-              planet.defencePlatforms++;
-              break;
-            case 'gate':              
-              Notification.gateCreated(planet);
-              planet.system.gates.push(Gate.make(planet.system, undefined));
-              break;
-            case 'probe':
-            //  let destination = Notification.probeCreated(planet);
-              
-              /*let probe:Probe  = {
-                owner:planet.system.owner,
-                destination : destination          
-              }
-              Traffic
-              */
-              break;
-            case 'freighter':
-           //   Notification.freighterCreated(planet);
-              break;
-            case 'ship':
-          //    Notification.shipCreated (planet);
-              break;
+    export function orbitalProduction(planet: Planet) {
+      const goal = planet.orbitalBuildGoal;
+      if (goal) {
+        if (resourcesAvailableForOrbitalItem(planet)) {
+          const w = planet.jobAssignments['orbiter'];
+          const d = OrbitalItems.difficultyModifier[goal];
+          const t = planet.system.owner.tech;
+          let m = 1;
+          if (planet.system.owner.money < 0) m = 0.1;
+          const item = planet.orbitalBuildGoal;
+          let shipModifier = 1; //not affect.
+          if (item === 'ship') {
+            shipModifier += planet.orbitalBuildGoalShipClass.size;
           }
-          planet.buildProgress[planet.orbitalBuildGoal] += 0; //Reset build counter...
+
+          const before = planet.buildProgress[planet.orbitalBuildGoal];
+          planet.buildProgress[planet.orbitalBuildGoal] += w * d * t * m;
+          const after = planet.buildProgress[planet.orbitalBuildGoal];
+          if (after > before) {
+
+            switch (planet.orbitalBuildGoal) {
+              case 'orbital':
+                Notification.orbitalItemCompleted(planet);
+                planet.orbitals++;
+                break;
+              case 'defence':
+                Notification.defencePlatformCompleted(planet);
+                planet.defencePlatforms++;
+                break;
+              case 'gate':
+                Notification.gateCreated(planet);
+                planet.system.gates.push(Gate.make(planet.system, undefined));
+                break;
+              case 'probe':
+                const destination = Notification.probeCreated(planet);
+                const probe: Probe = {
+                  owner: planet.system.owner,
+                  destination: destination
+                }
+                Traffic.addProbeTraffic(probe, planet.system, destination);
+                break;
+              case 'gateship':
+                const gsDestination = Notification.gateShipCreated(planet);
+                const gateShip: GateShip = GateShip.make(planet.system.owner, planet.system, gsDestination);
+                Traffic.addGateShipTraffic (gateShip);
+                break;
+              case 'freighter':
+                const fleet: Fleet = Fleet.make(planet.system);
+                const freighter = Freighter.make(planet.system, fleet);
+                Notification.freighterCreated(freighter, planet);
+                planet.system.fleets.push(fleet);
+                break;
+
+              case 'ship':
+                //    Notification.shipCreated (planet);
+                break;
+            }
+            planet.buildProgress[planet.orbitalBuildGoal] += 0; //Reset build counter...
+          }
+        } else {
+          Notification.insufficientMaterialToBuildOrbitalItem(planet);
         }
-      } else {
-        Notification.insufficientMaterialToBuildOrbitalItem(planet);
       }
     }
   }
 }
-
 
 /* Money
 

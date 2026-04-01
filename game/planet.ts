@@ -4,6 +4,7 @@ import {ShipClass } from './ship';
 export type Planet = {
   name: string;
   population: number;
+  populationGrowthModifier : number;
   resourceModifier : Record <ResourceType,number>; //is a modifier
   infrastructureModifier : Record <ResourceType,number>;   //is a modifier for RESOURCE extraction 
   jobAssignments:Record<Job,number>; 
@@ -37,11 +38,12 @@ export namespace Planet {
     return planet.population - available; // Returns shortfall.
   }
 
-  export function populationGrowth(_planet: Planet) {
-    // TODO: implement
+  export function populationGrowth(planet: Planet) {
+    planet.population +=planet.system.owner.populationGrowthBase * planet.populationGrowthModifier * (1 +planet.system.owner.tech/2);
   }
 
-  export function starvation(_surplusFood: number, _planet: Planet) {
-    // TODO: implement
+  export function starvation(shortfall:number, planet: Planet) {
+    let shortMod = (planet.population-shortfall)/planet.population;
+    planet.population -= shortMod * planet.system.owner.populationStarvationBase *  planet.populationGrowthModifier ;
   }
 }

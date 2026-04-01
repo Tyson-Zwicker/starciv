@@ -37,12 +37,6 @@ export namespace Gate {
 //If the destination Blocks it doesn't affect ships (well- it slows them, but they're still coming).
 //in GateSpace.
 //Assist can affect speed of shps in GateSpace, but 
-//only _positively_ so, if either gate switches direction
+//only positively so, if either gate switches direction
 //to favor the "other way" the in-transit ship's
 //speed remains base-line.  
-
-//Gateships must be sent through a gate.  They travel much slower than normal ships because they need to "microjump",
-//which is a process of stopping once in a while, leaving a beacon, jumping back home, and then microjumping again,
-//each time getting closer to the destination. This mechanism isn't visible, but it is reflected by the fact that
-//gate ships go much slower than normal ships, and they can only be sent to the gate they originated from.
-

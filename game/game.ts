@@ -5,17 +5,15 @@ import { Economy } from './economy';
 import { Fleet } from './fleet';
 import { Gate } from './gate';
 import { Planet } from './planet';
-//import { Freighter } from './ship';
 import { System } from './system';
 import { Trade } from './trade';
 import { Traffic, GateTraffic } from './traffic';
 import { War } from './war';
 
 export default class Game {
-  gates = new Map<number, Gate>();
+  
   gateArrivals: GateTraffic[] = [];
   civilizations: Civilization[] = [];
-  systems = new Map<number, System>();
   gameover = false;
 
   processTurn() {
@@ -40,7 +38,17 @@ export default class Game {
         };
         gateShip.destination.gates.push(gate);
       }
+//TODO: Pretty much anywhere a Notification leads to a change, needs to change:
+//1. Its queues an "action" in place of the actual doing.
+//2. An action must be written to look for the list, and do the things at the end of the turn...
+//   because the human player will be on a browser- they're the only one not actually playing here..
 
+
+//TODO: The only make this visible to the player(s) directly (as they play around on the map and
+// re-arrange things) would be to run the game
+//as a service OR put a tiny in the game server in here...
+
+//OR EASY WAY: treat Game like the state engine it is and make it single player runs in the browser....
       for (const system of civ.systems.settled) {
         // Fill outgoing freighters in all fleets. (before sending because fleet could have more than one contracted freighter)
         for (const freighter of system.allFreighters) {
@@ -95,7 +103,7 @@ export default class Game {
             if (fleet.freighters.length > 0) {
               for (const freighter of fleet.freighters) { // Freighters are added to AllFreighters list              
                 System.addToAllFreighters(system, freighter); //So there contracts can be dealt with start of next turn,
-                Trade.acceptIncomingGoods(system, freighter);
+                Trade.unloadFreighter(system, freighter);
                 if (freighter.contract && !Contract.nextPhase(freighter.contract)) {//This moves the contract phase and returnsfalse if its got nowhere to go..
                   freighter.contract = undefined;
                   if (freighter.fleet.owner !== civ) Notification.youCannotParkFreighterHere(freighter);

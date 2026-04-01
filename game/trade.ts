@@ -11,7 +11,7 @@ export namespace Trade {
         if (freighter.fleet && freighter.contract && freighter.contract.destination) {
           system.stores[freighter.contract.resource] -= freighter.contract.amount;
           freighter.amountCarried = freighter.contract.amount;
-          freighter.fleet.orders = Orders.make('travel',system, freighter.contract.destination, false);
+          freighter.fleet.orders = Orders.make('travel', system, freighter.contract.destination, false);
           return true;
         }
       }
@@ -19,7 +19,9 @@ export namespace Trade {
     return false;
   }
 
-  export function acceptIncomingGoods(_system: System, _incomingFreighters: Freighter): void {
-    // TODO: implement
+  export function unloadFreighter(system: System, freighter: Freighter): void {
+    if (freighter.contract === undefined) return;
+    system.stores[freighter.contract.resource] += freighter.amountCarried;
+    freighter.amountCarried = 0;
   }
 }

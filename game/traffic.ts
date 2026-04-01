@@ -1,6 +1,7 @@
 import { System } from './system';
 import { Fleet } from './fleet';
 import { Probe, GateShip } from './ship';
+import { Civilization } from './civilization';
 
 export type GateTraffic = {
   origin: System,
@@ -128,10 +129,10 @@ export namespace Traffic {
     Traffic.probeTraffic.length = 0;
     Traffic.probeTraffic.push(...keep);
   }
-  export function getArrivedProbes(system: System): Probe[] {
+  export function getArrivedProbes(civ: Civilization): Probe[] {
     const probes: Probe[] = [];
     for (const probe of Traffic.probeArrivals) {
-      if (probe.destination === system) probes.push(probe);
+      if (probe.owner === civ) probes.push(probe);
     }
     return probes;
   }
@@ -157,10 +158,10 @@ export namespace Traffic {
       remaining: System.calcDistance(gateShip.origin, gateShip.destination)
     });
   }
-  export function getArrivedGateShips(system: System): GateShip[] {
+  export function getArrivedGateShips(civ: Civilization): GateShip[] {
     const gateShips: GateShip[] = [];
     for (const gateShip of Traffic.gateShipArrivals) {
-      if (gateShip.destination === system) gateShips.push(gateShip);
+      if (gateShip.owner === civ) gateShips.push(gateShip);
     }
     return gateShips;
   }

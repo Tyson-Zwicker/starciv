@@ -1,6 +1,6 @@
 import {System} from './system';
 import {ResourceType} from './economy';
-export type ContractDirection = -1 | 0 | 1;
+export type Direction = -1 | 0 | 1;
 
 export type Contract = {
   //Destination can be none: inactive/system-bound freighters
@@ -8,12 +8,12 @@ export type Contract = {
   destination: System | undefined;
   resource: ResourceType;
   amount: number;
-  direction: ContractDirection;
+  direction: Direction;
 };
 
 export namespace Contract {
   // Direction 0 or 1 = going to destination, -1 = returning, 0 = one way.
-  export function makeContract(origin: System, destination: System, resource: ResourceType, amount: number, direction: ContractDirection): Contract {
+  export function makeContract(origin: System, destination: System, resource: ResourceType, amount: number, direction: Direction): Contract {
     return { origin, destination, resource, amount, direction };
   }
 

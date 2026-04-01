@@ -9,6 +9,8 @@ export type Civilization = {
   friends: Civilization[];
   enemies: Civilization[];
   tech :number;
+  populationStarvationBase:number;
+  populationGrowthBase:number;
 }
 
 export namespace Civilization {
